@@ -10,32 +10,64 @@ public class ShieldController : MonoBehaviour {
 
 	public float CollisionForce;
 
+	public ForceMode BounceType;
+	public float BounceMultiplier;
+
 	private MeshRenderer shieldRenderer;
 	private Outline shieldOutline;
+	private Vector3 shieldOffset;
+    private Rigidbody shieldBody;
+    private PhysicMaterial shieldPhyMaterial;
+
+	public GameObject Target;
+	private Rigidbody targetBody;
+
+	//private FixedJoint joint;
+	//private Rigidbody jointConnectedBody;
 
 	private Color shieldColor;
 	private float shieldValue = 1.0f;
-	
+
 	private bool colliding;	
 	private float startRecharging;
 
 	// Use this for initialization
 	void Start () {
+		shieldBody = GetComponent<Rigidbody>();
+		
 		shieldRenderer = GetComponent<MeshRenderer>();
 		shieldRenderer.enabled = false;
 
 		shieldOutline = GetComponent<Outline>();
-
 		shieldColor = shieldOutline.OutlineColor;
 		shieldColor.a = 1;
 		shieldOutline.OutlineColor = shieldColor;
+
+		//joint = gameObject.AddComponent<FixedJoint>();
+		//joint.connectedBody = Target.GetComponent<Rigidbody>();
+
+		shieldOffset = Target.transform.position - transform.position;
+		shieldPhyMaterial = GetComponent<Collider>().material;
+		
+		targetBody = Target.GetComponent<Rigidbody>();
+	}
+
+	string lastMessage =  "";
+	void Log(string message) {
+		if (!lastMessage.Equals(message)) {
+			Debug.Log(message);
+			lastMessage = message;
+		}
 	}
 
 	void Update() {
-		if (colliding) {
+		transform.position = Target.transform.position - shieldOffset;
+		transform.rotation = Target.transform.rotation;
+
+		if (colliding && shieldValue > 0) {
 			shieldValue = Mathf.Max(0f, shieldValue - (1 / DischargeSpeed) * Time.deltaTime);
 			startRecharging = Time.time + RechargeDelay;
-		} else if (shieldValue < 1 && startRecharging < Time.time) {
+		} else if (!colliding && shieldValue < 1 && startRecharging < Time.time) {
 			shieldValue = Mathf.Max(0f, shieldValue + (1 / RechargeSpeed) * Time.deltaTime);
 		}
 
@@ -63,15 +95,18 @@ public class ShieldController : MonoBehaviour {
  	}
 
 	void OnCollisionEnter(Collision collision) {
-		Debug.Log("Collision Speed: " + collision.relativeVelocity.magnitude + " - with: " + collision.collider);
-		if (collision.relativeVelocity.magnitude > CollisionForce) {
+		float force =  targetBody.velocity.magnitude;
+		Debug.Log("Collision Speed: " + force + " - with: " + collision.collider);
+		if (force > CollisionForce) {
 			shieldValue *= 0.5f;
 			colliding = true;
+
+			Vector3 bounce = collision.contacts[0].normal * force * (1 + shieldPhyMaterial.bounciness) * BounceMultiplier;
+			targetBody.AddForce(bounce, BounceType);
 		}
 	}
 
 	void OnCollisionExit(Collision collision) {
-		Debug.Log("Exit: " + collision.collider);
 		colliding = false;
 	}
 }
