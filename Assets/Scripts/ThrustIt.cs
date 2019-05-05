@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class ThrustIt : MonoBehaviour {
 
-	public float Force;
+	public float VerticalForce;
+	public float LateralForce;
 
 	private Rigidbody rigid;
 
@@ -15,8 +16,8 @@ public class ThrustIt : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		Vector3 thrust = (Vector3.up * Force * Input.GetAxis("Vertical")) +
-			(-Vector3.forward * Force * Input.GetAxis("Horizontal"));
+		Vector3 thrust = (Vector3.up * VerticalForce * Input.GetAxis("Vertical")) +
+			(-Vector3.forward * LateralForce * Input.GetAxis("Horizontal"));
 		rigid.AddForce(thrust);
 	}
 }

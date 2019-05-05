@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
+     <Compile Include="Assets\Scripts\CoreLinker.cs" />
      <Compile Include="Assets\Scripts\KeepPosition.cs" />
      <Compile Include="Assets\Scripts\PIDController.cs" />
      <Compile Include="Assets\Scripts\SelfRighting.cs" />
