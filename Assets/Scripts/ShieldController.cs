@@ -22,110 +22,53 @@ public class ShieldController : MonoBehaviour {
 
 	private MeshRenderer shieldRenderer;
 	private Outline shieldOutline;
-	private Vector3 shieldOffset;
-    private Rigidbody shieldBody;
     private PhysicMaterial shieldPhyMaterial;
 
 	public GameObject Target;
 	private Rigidbody targetBody;
 
-	//private FixedJoint joint;
-	//private Rigidbody jointConnectedBody;
-
-	private Material shieldMaterial;
 	private Color shieldColor;
 	private float shieldValue;
 
-	private bool colliding;	
 	private float startRecharging;
 
 	private Coroutine shieldAnimator;
-	private Coroutine shieldBarAnimator;
-	private float shieldBarValue;
 
 	// Use this for initialization
 	void Start () {
 		shieldValue = ShieldMax;
-		shieldBarValue = ShieldMax;
 
-		shieldBody = GetComponent<Rigidbody>();
-		
 		shieldRenderer = GetComponentInChildren<MeshRenderer>();
 		shieldRenderer.enabled = false;
-		shieldMaterial = shieldRenderer.material;
 
 		shieldOutline = GetComponentInChildren<Outline>();
 		shieldColor = shieldOutline.OutlineColor;
 		shieldColor.a = 1;
 		shieldOutline.OutlineColor = shieldColor;
 
-		//joint = gameObject.AddComponent<FixedJoint>();
-		//joint.connectedBody = Target.GetComponent<Rigidbody>();
-
-		shieldOffset = Target.transform.position - transform.position;
 		shieldPhyMaterial = GetComponentInChildren<Collider>().material;
 		
 		targetBody = Target.GetComponent<Rigidbody>();
 
-		shieldBarAnimator = StartCoroutine(AnimateShieldBar(shieldValue));
-	}
-
-	string lastMessage =  "";
-	void Log(string message) {
-		if (!lastMessage.Equals(message)) {
-			Debug.Log(message);
-			lastMessage = message;
-		}
+		StartCoroutine(AnimateShieldBar(shieldValue));
 	}
 
 	void Update() {
-		transform.position = Target.transform.position - shieldOffset;
+		transform.position = Target.transform.position;
 		transform.rotation = Target.transform.rotation;
 		
-		/*/
-		if (colliding && shieldValue > 0) {
-			shieldValue = Mathf.Max(0f, shieldValue - (1 / DischargeSpeed) * Time.deltaTime);
-			startRecharging = Time.time + RechargeDelay;
-		} else 
-		*/
-
 		if (shieldValue < ShieldMax && startRecharging < Time.time) {
 			shieldValue = Mathf.Min(ShieldMax, shieldValue + (RechargeSpeed * Time.deltaTime));
 
 			shieldColor.a = shieldValue / ShieldMax;
 			shieldOutline.OutlineColor = shieldColor;
 		}
-
-		/*
-		if (shieldValue == 0) {
-			shieldRenderer.enabled = false;
-			shieldOutline.enabled = false;
-		} else if (shieldValue < 0.1f) {
-			shieldRenderer.enabled = Random.Range(0, 5) == 0;
-			shieldRenderer.material.SetTextureOffset("_MainTex", new Vector2(Time.time, Time.time / 2));
-
-			shieldOutline.enabled = shieldRenderer.enabled;
-			shieldColor.a = 1;
-			shieldOutline.OutlineColor = shieldColor;
-		} else if (shieldValue < 1.0f || shieldColor.a < 0.99f) {
-			shieldRenderer.enabled = true;
-			shieldRenderer.material.SetTextureOffset("_MainTex", new Vector2(Time.time, Time.time / 2));
-
-			shieldOutline.enabled = true;
-			shieldOutline.OutlineColor = shieldColor;
-			shieldColor.a = Mathf.Lerp(shieldColor.a, shieldValue, Time.deltaTime);
-		} else {
-			shieldRenderer.enabled = false;
-			shieldOutline.enabled = false;
-		}
-		 */
  	}
 
 	void OnCollisionEnter(Collision collision) {
 		float force =  targetBody.velocity.magnitude;
 		Debug.Log("Collision Speed: " + force + " - with: " + collision.collider);
 		if (force > CollisionTriggerForce && shieldValue > 0) {
-			colliding = true;
 			startRecharging = Time.time + RechargeDelay;
 
 			float oldValue = shieldValue;
@@ -143,10 +86,6 @@ public class ShieldController : MonoBehaviour {
 		}
 	}
 
-	void OnCollisionExit(Collision collision) {
-		colliding = false;
-	}
-
 	IEnumerator AnimateShield(float oldValue, float newValue) {
 		shieldColor.a = oldValue;
 
@@ -156,7 +95,6 @@ public class ShieldController : MonoBehaviour {
 		shieldRenderer.material.SetColor("_Color", shieldColor);
 		shieldRenderer.transform.localScale = Vector3.one;
 		shieldRenderer.enabled = true;
-
 
 		float ttl = 0.1f;
 		bool explode = false;

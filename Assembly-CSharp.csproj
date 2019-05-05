@@ -54,6 +54,9 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
+     <Compile Include="Assets\Scripts\KeepPosition.cs" />
+     <Compile Include="Assets\Scripts\PIDController.cs" />
+     <Compile Include="Assets\Scripts\SelfRighting.cs" />
      <Compile Include="Assets\Scripts\ShieldController.cs" />
      <Compile Include="Assets\Scripts\ThrustIt.cs" />
      <Compile Include="Assets\Third Party\MKGlowFree\Examples\Scripts\Asteroid.cs" />
