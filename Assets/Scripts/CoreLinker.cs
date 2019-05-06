@@ -51,6 +51,11 @@ public class CoreLinker : MonoBehaviour {
 		}
 
 		if (line.enabled) {
+			if (joint.connectedBody == null) {
+				Destroy(joint);
+				line.enabled = false;
+			}
+
 			line.SetPosition(0, gameObject.transform.position);
 			line.SetPosition(1, joint.connectedBody.transform.position);
 		}
@@ -59,13 +64,11 @@ public class CoreLinker : MonoBehaviour {
 	private void OnTriggerEnter(Collider other) {
 		if (other.CompareTag("Core")) {
 			currentTarget = other.gameObject;
-			Debug.Log("Current Target: " + currentTarget);
 		}
 	}
 
 	private void OnTriggerExit(Collider other) {
 		if (other == currentTarget) {
-			Debug.Log("Current Target: <lost>");
 			currentTarget = null;
 		}
 	}

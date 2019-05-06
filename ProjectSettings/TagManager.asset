@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Core
+  - Terrain
+  - Platform
+  - Shield
   layers:
   - Default
   - TransparentFX

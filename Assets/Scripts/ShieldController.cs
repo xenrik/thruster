@@ -54,6 +54,10 @@ public class ShieldController : MonoBehaviour {
 	}
 
 	void Update() {
+		if (Target == null) {
+			return;
+		}
+
 		transform.position = Target.transform.position;
 		transform.rotation = Target.transform.rotation;
 		
@@ -66,6 +70,10 @@ public class ShieldController : MonoBehaviour {
  	}
 
 	void OnCollisionEnter(Collision collision) {
+		if (targetBody == null) {
+			return;
+		}
+		
 		float force =  targetBody.velocity.magnitude;
 		Debug.Log("Collision Speed: " + force + " - with: " + collision.collider);
 		if (force > CollisionTriggerForce && shieldValue > 0) {

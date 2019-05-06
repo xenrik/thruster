@@ -260,6 +260,7 @@ GameObject:
   - component: {fileID: 291367243}
   - component: {fileID: 291367242}
   - component: {fileID: 291367241}
+  - component: {fileID: 291367246}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -350,6 +351,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &291367246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 291367240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d982c1bae7c4d3429b26dbbc1ecb374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  explosionPrefab: {fileID: 1889951617326728, guid: 78a986c3450cd374a9073c2eb32e1426,
+    type: 2}
+  ForbiddenTags: []
+  AllowedTags:
+  - Platform
+  ExplosionRadius: 10
+  ExplosionForce: 5000
 --- !u!1 &380398594
 GameObject:
   m_ObjectHideFlags: 0
@@ -559,6 +578,14 @@ Prefab:
     - target: {fileID: 400004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_LocalScale.z
       value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_TagString
+      value: Terrain
+      objectReference: {fileID: 0}
+    - target: {fileID: 100002, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_TagString
+      value: Terrain
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
@@ -869,6 +896,25 @@ MonoBehaviour:
     Ki: 0.05
     Kd: 1
   TargetPosition: 0
+--- !u!114 &1120371593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1120371584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d982c1bae7c4d3429b26dbbc1ecb374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  explosionPrefab: {fileID: 1889951617326728, guid: 78a986c3450cd374a9073c2eb32e1426,
+    type: 2}
+  ForbiddenTags: []
+  AllowedTags:
+  - Platform
+  - Shield
+  ExplosionRadius: 0
+  ExplosionForce: 0
 --- !u!1 &1512196690
 GameObject:
   m_ObjectHideFlags: 0
@@ -1567,7 +1613,7 @@ GameObject:
   - component: {fileID: 1713086326}
   m_Layer: 0
   m_Name: Shield
-  m_TagString: Untagged
+  m_TagString: Shield
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1739,7 +1785,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: 353362cb2a4c3c14593a4c8304e8e61d, type: 3}
       propertyPath: m_Name
-      value: Platform (1)
+      value: GoalPlatform
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: 353362cb2a4c3c14593a4c8304e8e61d, type: 3}
+      propertyPath: m_TagString
+      value: Platform
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 353362cb2a4c3c14593a4c8304e8e61d, type: 3}
@@ -1782,6 +1832,14 @@ Prefab:
     - target: {fileID: 400000, guid: 353362cb2a4c3c14593a4c8304e8e61d, type: 3}
       propertyPath: m_RootOrder
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: 353362cb2a4c3c14593a4c8304e8e61d, type: 3}
+      propertyPath: m_TagString
+      value: Platform
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: 353362cb2a4c3c14593a4c8304e8e61d, type: 3}
+      propertyPath: m_Name
+      value: StartPlatform
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 353362cb2a4c3c14593a4c8304e8e61d, type: 3}
@@ -2096,3 +2154,80 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &2141592950
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2141592953}
+  - component: {fileID: 2141592952}
+  - component: {fileID: 2141592951}
+  m_Layer: 0
+  m_Name: Camera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!81 &2141592951
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2141592950}
+  m_Enabled: 1
+--- !u!20 &2141592952
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2141592950}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_FocalLength: 50
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!4 &2141592953
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2141592950}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.23570234, y: -30.632, z: 35.16}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 12
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

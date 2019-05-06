@@ -53,8 +53,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Scripts\AutoDestroy.cs" />
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
      <Compile Include="Assets\Scripts\CoreLinker.cs" />
+     <Compile Include="Assets\Scripts\Exploder.cs" />
      <Compile Include="Assets\Scripts\KeepPosition.cs" />
      <Compile Include="Assets\Scripts\PIDController.cs" />
      <Compile Include="Assets\Scripts\SelfRighting.cs" />
@@ -119,6 +121,7 @@
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsSelective\Legacy\Normal\MK_Normal-Glossy.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\Inc\UI.hlsl" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsLuminance\UI\UI-Unlit-TextDetail.shader" />
+     <None Include="Assets\Graphics\Shaders\ForegroundParticle.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsSelective\Legacy\Transparent\MK_Transparent-DiffuseBumped.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsLuminance\UI\UI-Lit-Refraction.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsSelective\Legacy\Other\MK_Mobile-Diffuse.shader" />
