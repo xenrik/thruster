@@ -5,9 +5,14 @@ using UnityEngine;
 public class ThrustIt : MonoBehaviour {
 
 	public float VerticalForce;
+
 	public float LateralForce;
+	public float TurnForce;
+
+	public bool TurnSupported;
 
 	private Rigidbody rigid;
+
 
 	// Use this for initialization
 	void Start () {
@@ -16,8 +21,16 @@ public class ThrustIt : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		Vector3 thrust = (Vector3.up * VerticalForce * Input.GetAxis("Vertical")) +
-			(-Vector3.forward * LateralForce * Input.GetAxis("Horizontal"));
-		rigid.AddForce(thrust);
+		float thrust = VerticalForce * Input.GetAxis("Vertical");
+		float lateral = LateralForce * Input.GetAxis("Horizontal");
+		float turn = TurnForce * Input.GetAxis("Horizontal");
+		
+		if (TurnSupported) {
+			rigid.AddTorque(Vector3.left * turn);
+			rigid.AddForce(transform.up * thrust);
+		} else {
+			rigid.AddForce((Vector3.up * thrust) + (-Vector3.forward * lateral));
+		}
+			
 	}
 }
