@@ -70,7 +70,7 @@ public class ShieldController : MonoBehaviour {
  	}
 
 	void OnCollisionEnter(Collision collision) {
-		if (targetBody == null) {
+		if (targetBody == null || collision.gameObject == Target) {
 			return;
 		}
 		
