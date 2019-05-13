@@ -5,27 +5,25 @@ using UnityEngine;
 
 public class CrossSectionController : MonoBehaviour {
 
+	public GameObject SurfaceLevel;
+
 	public GameObject Thruster;
 	public GameObject Tunnel;
 	public GameObject Stencil;
-
-	public Shader CrossSectionShader;
-
-	private List<Material> crossSectionMaterials;
 	
+	private CrossSectionMaterial[] materials;
+	private Renderer[] renderers;
+
+	private bool showingCrossSectionMaterial = false;
+
 	// Use this for initialization
 	void Start () {
 		// On the tunnel, find all renderers and from them all materials that have the cross section shader
-		Renderer[] renderers = Tunnel.GetComponentsInChildren<Renderer>();
-
-		// Collect the materials
-		var materials = new List<Material>();
-		foreach (Renderer r in renderers) {
-			materials.AddRange(r.materials);
+		materials = Tunnel.GetComponentsInChildren<CrossSectionMaterial>();
+		renderers = new Renderer[materials.Length];
+		for (int i = 0; i < materials.Length; ++i) {
+			renderers[i] = materials[i].gameObject.GetComponent<Renderer>();
 		}
-
-		// Filter to only those we want
-		crossSectionMaterials = materials.Where(m => m.shader != null && m.shader.name == CrossSectionShader.name).ToList();
 	}
 	
 	// Update is called once per frame
@@ -33,16 +31,36 @@ public class CrossSectionController : MonoBehaviour {
 		if (Thruster == null) {
 			return;
 		}
-		
-		Vector3 stencilPos = Thruster.transform.position;
-		stencilPos.y = 0;
-		stencilPos.z = 0;
 
-		Stencil.transform.position = stencilPos;
+		if (Thruster.transform.position.y > SurfaceLevel.transform.position.y) {
+			if (showingCrossSectionMaterial) {
+				for (int i = 0; i < renderers.Length; ++i) {
+					renderers[i].material = materials[i].Standard;
+				}
 
-		Vector4 planePosition = new Vector4(stencilPos.x, 0, 0, 1);
-		foreach (Material m in crossSectionMaterials) {
-			m.SetVector("_PlanePosition", planePosition);
+				Stencil.SetActive(false);
+				showingCrossSectionMaterial = false;
+			}
+		} else {
+			if (!showingCrossSectionMaterial) {
+				for (int i = 0; i < renderers.Length; ++i) {
+					renderers[i].material = materials[i].CrossSection;
+				}
+				
+				Stencil.SetActive(true);
+				showingCrossSectionMaterial = true;
+			}
+
+			Vector3 stencilPos = Thruster.transform.position;
+			stencilPos.y = 0;
+			stencilPos.z = 0;
+
+			Stencil.transform.position = stencilPos;
+
+			Vector4 planePosition = new Vector4(stencilPos.x, 0, 0, 1);
+			foreach (CrossSectionMaterial m in materials) {
+				m.CrossSection.SetVector("_PlanePosition", planePosition);
+			}
 		}
 	}
 }

@@ -57,6 +57,8 @@
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
      <Compile Include="Assets\Scripts\CoreLinker.cs" />
      <Compile Include="Assets\Scripts\CrossSectionController.cs" />
+     <Compile Include="Assets\Scripts\CrossSectionController2.cs" />
+     <Compile Include="Assets\Scripts\CrossSectionMaterial.cs" />
      <Compile Include="Assets\Scripts\Exploder.cs" />
      <Compile Include="Assets\Scripts\KeepPosition.cs" />
      <Compile Include="Assets\Scripts\PIDController.cs" />
@@ -109,6 +111,7 @@
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsSelective\Legacy\Normal\MK_Normal-DiffuseBumpSpec.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\Effect\MKGlowSM30.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsLuminance\UI\UI-Unlit-Detail.shader" />
+     <None Include="Assets\Graphics\Shaders\FadeWithZDepth.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\Effect\MKGlowSM40.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsSelective\Legacy\Other\MK_Illumin-Diffuse.shader" />
      <None Include="Assets\Third Party\MKGlowFree\Shaders\VariantsLuminance\UI\UI-Unlit-Text.shader" />
