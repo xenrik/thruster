@@ -29,7 +29,7 @@ public class ThrustIt : MonoBehaviour {
 			rigid.AddTorque(Vector3.left * turn);
 			rigid.AddForce(transform.up * thrust);
 		} else {
-			rigid.AddForce((Vector3.up * thrust) + (-Vector3.forward * lateral));
+			rigid.AddForce((Vector3.up * thrust) + (Vector3.left * lateral));
 		}
 			
 	}

@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 
-public class RotationController : MonoBehaviour {
+public class RotationControllerExample : MonoBehaviour {
 
     public Slider XRot;
     public Slider YRot;

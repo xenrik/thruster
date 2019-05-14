@@ -70,7 +70,7 @@ public class CrossSectionController2 : MonoBehaviour {
 
 			Stencil.transform.position = stencilPos;
 
-			Vector4 planePosition = new Vector4(stencilPos.x, 0, 0, 1);
+			Vector4 planePosition = new Vector4(stencilPos.x, stencilPos.y, stencilPos.z, 1);
 			foreach (Material m in crossSectionMaterials) {
 				m.SetVector("_PlanePosition", planePosition);
 			}
@@ -78,8 +78,6 @@ public class CrossSectionController2 : MonoBehaviour {
 	}
 
 	private IEnumerator HideCrossSection() {
-		Debug.Log("Hiding Cross Section");
-
 		Color[] colors = new Color[aboveSurfaceMaterials.Count]; 
 		for (int i = 0; i < colors.Length; ++i) {
 			colors[i] = aboveSurfaceMaterials[i].GetColor("_Color");
@@ -108,13 +106,10 @@ public class CrossSectionController2 : MonoBehaviour {
 			yield return null;
 		}
 
-		Debug.Log("Finished");
 		TunnelCrossSection.SetActive(false);
 	}
 
 	private IEnumerator ShowCrossSection() {
-		Debug.Log("Showing Cross Section");
-
 		Color[] colors = new Color[aboveSurfaceMaterials.Count]; 
 		for (int i = 0; i < colors.Length; ++i) {
 			colors[i] = aboveSurfaceMaterials[i].GetColor("_Color");
@@ -143,7 +138,6 @@ public class CrossSectionController2 : MonoBehaviour {
 			yield return null;
 		}
 
-		Debug.Log("Finished");
 		TunnelAboveSurface.SetActive(false);
 	}
 }
