@@ -20,6 +20,7 @@ public class CrossSectionController2 : MonoBehaviour {
 	private List<Material> aboveSurfaceMaterials;
 
 	private bool showingCrossSection = false;
+	private Quaternion stencilRotationOffset;
 
 	// Use this for initialization
 	void Start () {
@@ -41,6 +42,8 @@ public class CrossSectionController2 : MonoBehaviour {
 		foreach (Renderer r in renderers) {
 			aboveSurfaceMaterials.AddRange(r.materials);
 		}
+
+		stencilRotationOffset = Stencil.transform.rotation;
 	}
 	
 	// Update is called once per frame
@@ -64,15 +67,31 @@ public class CrossSectionController2 : MonoBehaviour {
 				showingCrossSection = true;
 			}
 		
+			GameObject camera = gameObject;
+			float yRot = camera.transform.rotation.eulerAngles.y;
+			yRot = (Mathf.RoundToInt(yRot / 90) % 4) * 90;
+			bool showingFront = yRot == 0 || yRot == 180;
+
 			Vector3 stencilPos = Thruster.transform.position;
 			stencilPos.y = 0;
-			stencilPos.z = 0;
+			if (showingFront) {
+				stencilPos.x = 0;
+			} else {
+				stencilPos.z = 0;
+			}
+
+			Debug.Log("yRot: " + yRot + " - showingFront: " + showingFront);
 
 			Stencil.transform.position = stencilPos;
+			Stencil.transform.rotation = Quaternion.Euler(0, yRot + 180, 0) * stencilRotationOffset;
 
 			Vector4 planePosition = new Vector4(stencilPos.x, stencilPos.y, stencilPos.z, 1);
+			Vector3 planeNormal3 = Quaternion.Euler(0, 90, 0) * Vector3.Cross(Stencil.transform.rotation * Vector3.up, Stencil.transform.rotation * Vector3.left);
+
+			Vector4 planeNormal = new Vector4(planeNormal3.x, planeNormal3.y, planeNormal3.z, 1);
 			foreach (Material m in crossSectionMaterials) {
 				m.SetVector("_PlanePosition", planePosition);
+				m.SetVector("_PlaneNormal", planeNormal);
 			}
 		}
 	}
