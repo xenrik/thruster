@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ThrustIt : MonoBehaviour {
 
+	public new Camera camera;
 	public float VerticalForce;
 
 	public float LateralForce;
@@ -12,7 +13,7 @@ public class ThrustIt : MonoBehaviour {
 	public bool TurnSupported;
 
 	private Rigidbody rigid;
-
+	
 
 	// Use this for initialization
 	void Start () {
@@ -29,7 +30,8 @@ public class ThrustIt : MonoBehaviour {
 			rigid.AddTorque(Vector3.left * turn);
 			rigid.AddForce(transform.up * thrust);
 		} else {
-			rigid.AddForce((Vector3.up * thrust) + (Vector3.left * lateral));
+			Quaternion lateralRot = Quaternion.Euler(0, -90, 0) * camera.transform.rotation;
+			rigid.AddForce((Vector3.up * thrust) + (lateralRot * Vector3.forward * lateral));
 		}
 			
 	}
