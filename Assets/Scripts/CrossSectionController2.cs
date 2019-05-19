@@ -80,8 +80,6 @@ public class CrossSectionController2 : MonoBehaviour {
 				stencilPos.z = 0;
 			}
 
-			Debug.Log("yRot: " + yRot + " - showingFront: " + showingFront);
-
 			Stencil.transform.position = stencilPos;
 			Stencil.transform.rotation = Quaternion.Euler(0, yRot + 180, 0) * stencilRotationOffset;
 

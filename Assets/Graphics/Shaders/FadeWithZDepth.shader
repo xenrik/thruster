@@ -6,7 +6,7 @@
         _Metallic ("Metallic", Range(0,1)) = 0.0
     }
     SubShader {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjectors"="True"}
+        Tags { "Queue"="Transparent-1" "RenderType"="Transparent" "IgnoreProjectors"="True"}
         LOD 200
  
         // ZWrite pre-pass

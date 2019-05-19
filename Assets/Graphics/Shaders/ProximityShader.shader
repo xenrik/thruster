@@ -2,17 +2,25 @@
 
 Shader "Custom/ProximityShader" {
 	Properties {
-		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
+		_WarningColor ("Warning Color", Color) = (1,1,0,1)
+		_DangerColor ("Danger Color", Color) = (1,0,0,1)
+		_MaxAlpha("Max Alpha", Range(0,1)) = 0.5
+
 		_Position ("Position", Vector) = (0, 0, 0, 0)
+		_MinDistance("Min Distance", Float) = 1
+		_MaxDistance("Max Distance", Float) = 5
+
+		_DangerPercentage("Danger Percentage", Range(0,1)) = 0.5
+		_DangerFlashSpeed("Danger Flash Speed", Float) = 0.1
 	}
+
 	SubShader {
-		Tags { "RenderType"="Transparent" "Render"="Transparent" "IgnoreProjector" = "True"}
+		Tags { "RenderType"="Transparent" "Queue"="Transparent+1"}
 		LOD 200
 
-		ZWrite On
+		ZWrite Off
+		Cull Off
+		Lighting Off
 		Blend SrcAlpha OneMinusSrcAlpha
 
 		Pass {
@@ -37,7 +45,15 @@ Shader "Custom/ProximityShader" {
 			};
 
 			uniform float3 _Position;
-			uniform float4 _Color;
+			uniform float4 _WarningColor;
+			uniform float4 _DangerColor;
+			uniform float  _MaxAlpha;
+
+			uniform float  _MinDistance;
+			uniform float  _MaxDistance;
+
+			uniform float  _DangerPercentage;
+			uniform float  _DangerFlashSpeed;
 
 			v2f vert(appdata v) {
 				v2f o;
@@ -49,12 +65,21 @@ Shader "Custom/ProximityShader" {
 			}
 
 			fixed4 frag(v2f i) : SV_Target {
-				float4 col = _Color;
-				col.r = 1;
-				col.g = 0;
-				col.b = 0;
-				col.a = 0; //1 - distance(i.worldPos, _Position);
+				static const float PI = 3.14159;
 
+				float d = distance(i.worldPos, _Position);
+				d -= _MinDistance;
+				d = clamp(1 - d / (_MaxDistance - _MinDistance), 0, 1);
+
+				float4 col = _WarningColor;
+				if (d > 1 - _DangerPercentage) {
+					float st = (sin(_Time[1] / (_DangerFlashSpeed / PI)) + 1) / 2;
+					col.r = (_DangerColor.r * st * d) + (_WarningColor.r * (1 - (st * d)));
+					col.b = (_DangerColor.b * st * d) + (_WarningColor.b * (1 - (st * d)));
+					col.g = (_DangerColor.g * st * d) + (_WarningColor.g * (1 - (st * d)));
+				}
+
+				col.a = d * _MaxAlpha;
 				return col;
 			}
 
