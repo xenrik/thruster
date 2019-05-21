@@ -8,6 +8,7 @@ TagManager:
   - Terrain
   - Platform
   - Shield
+  - Bullet
   layers:
   - Default
   - TransparentFX

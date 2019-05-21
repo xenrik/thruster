@@ -661,6 +661,14 @@ Prefab:
       propertyPath: m_LocalPosition.x
       value: -0
       objectReference: {fileID: 0}
+    - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_TagString
+      value: Terrain
+      objectReference: {fileID: 0}
+    - target: {fileID: 100006, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_TagString
+      value: Terrain
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
   m_IsPrefabAsset: 0
@@ -928,6 +936,14 @@ Prefab:
     - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_TagString
+      value: Terrain
+      objectReference: {fileID: 0}
+    - target: {fileID: 100006, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_TagString
+      value: Terrain
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
@@ -1231,6 +1247,23 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 100002, guid: 1ac9ebfd85c184140b46e8510629829b,
     type: 3}
   m_PrefabInternal: {fileID: 1435549616}
+--- !u!114 &1089899735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1089899733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71e26e1b39b1df04da995c5f8972f3d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BulletPrefab: {fileID: 1667837642190352, guid: 7c48b958b5de71b4f8753ece92b5fd85,
+    type: 2}
+  Offset: 1.8
+  ShootFrequency: 2
+  BulletForce: 1.5
+  BulletTtl: 2
 --- !u!114 &1089899737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1352,6 +1385,7 @@ MonoBehaviour:
   AllowedTags:
   - Platform
   - Shield
+  - Terrain
   ExplosionRadius: 0
   ExplosionForce: 0
 --- !u!1001 &1435549616
@@ -2184,9 +2218,14 @@ MonoBehaviour:
   ShieldMax: 100
   RechargeSpeed: 10
   RechargeDelay: 2
-  CollisionTriggerForce: 3
-  CollisionTriggerMaxForce: 6
-  CollisionEffect: 25
+  DefaultTriggerForce: 1
+  DefaultMaxTriggerForce: 2
+  DefaultCollisionEffect: 25
+  CollisionTriggerForce:
+  - Tag: Bullet
+    TriggerForce: 0
+    MaxForce: 0.1
+    CollisionEffect: 10
   BounceType: 1
   BounceMultiplier: 1
   ShieldBar: {fileID: 232974465}

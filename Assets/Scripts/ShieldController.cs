@@ -10,10 +10,11 @@ public class ShieldController : MonoBehaviour {
 	public float RechargeSpeed;
 	public float RechargeDelay;
 
-	public float CollisionTriggerForce;
-	public float CollisionTriggerMaxForce;
+	public float DefaultTriggerForce;
+	public float DefaultMaxTriggerForce;
+	public float DefaultCollisionEffect;
 
-	public float CollisionEffect;
+	public TagCollision[] CollisionTriggerForce;
 
 	public ForceMode BounceType;
 	public float BounceMultiplier;
@@ -74,14 +75,26 @@ public class ShieldController : MonoBehaviour {
 			return;
 		}
 		
+		string tag = collision.gameObject.tag;
+		float triggerForce = DefaultTriggerForce;
+		float maxTriggerForce = DefaultMaxTriggerForce;
+		float collisionEffect = DefaultCollisionEffect;
+
+		foreach (TagCollision tagForce in CollisionTriggerForce) {
+			if (tagForce.Tag.Equals(tag)) {
+				triggerForce = tagForce.TriggerForce;
+				maxTriggerForce = tagForce.MaxForce;
+			}
+		}
+
 		float force =  targetBody.velocity.magnitude;
-		Debug.Log("Collision Speed: " + force + " - with: " + collision.collider);
-		if (force > CollisionTriggerForce && shieldValue > 0) {
+		if (force > triggerForce && shieldValue > 0) {
 			startRecharging = Time.time + RechargeDelay;
 
 			float oldValue = shieldValue;
-			float p = (Mathf.Min(force, CollisionTriggerMaxForce) - CollisionTriggerForce) / (CollisionTriggerMaxForce - CollisionTriggerForce);
-			float reduction = (ShieldMax - CollisionEffect) * p;
+			float p = (Mathf.Min(force, maxTriggerForce) - triggerForce) / (maxTriggerForce - triggerForce);
+			float reduction = collisionEffect * p;
+
 			shieldValue = Mathf.Max(0, shieldValue - reduction);
 
 			Vector3 bounce = collision.contacts[0].normal * force * (1 + shieldPhyMaterial.bounciness) * BounceMultiplier;
@@ -104,7 +117,6 @@ public class ShieldController : MonoBehaviour {
 		shieldRenderer.transform.localScale = Vector3.one;
 		shieldRenderer.enabled = true;
 
-		float ttl = 0.1f;
 		bool explode = false;
 		if (newValue == 0) {
 			oldValue = ShieldMax;
@@ -112,6 +124,7 @@ public class ShieldController : MonoBehaviour {
 			explode = true;
 		}
 
+		float ttl = 0.1f;
 		float t = 0;
 		while (t < ttl) {
 			float p = t / ttl;
@@ -164,5 +177,14 @@ public class ShieldController : MonoBehaviour {
 			yield return null;
 			t += Time.deltaTime;
 		}
+	}
+
+	[System.Serializable]
+	public class TagCollision {
+		public string Tag;
+
+		public float TriggerForce;
+		public float MaxForce;
+		public float CollisionEffect;
 	}
 }
