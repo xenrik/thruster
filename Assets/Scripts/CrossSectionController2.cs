@@ -13,7 +13,8 @@ public class CrossSectionController2 : MonoBehaviour {
 
 	public GameObject Stencil;
 
-	public Shader CrossSectionShader;
+	public Shader[] CrossSectionShaders;
+
 	public float FadeDuration;
 
 	private List<Material> crossSectionMaterials;
@@ -34,7 +35,8 @@ public class CrossSectionController2 : MonoBehaviour {
 		}
 
 		// Filter to only those we want
-		crossSectionMaterials = materials.Where(m => m.shader != null && m.shader.name == CrossSectionShader.name).ToList();
+		crossSectionMaterials = materials.Where(m => m.shader != null && 
+			CrossSectionShaders.Any(s => s.name.Equals(m.shader.name))).ToList();
 
 		// Collect the materials for the above surface renderers
 		aboveSurfaceMaterials = new List<Material>();

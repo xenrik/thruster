@@ -6,8 +6,8 @@ Material:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: CrossSection-Stencil
-  m_Shader: {fileID: 4800000, guid: 88b9999b87b4fd146a176b8e5bccc481, type: 3}
+  m_Name: CrossSection-Stencil-New
+  m_Shader: {fileID: 4800000, guid: 2a4829e0f6ac22648b562284e0de399b, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0

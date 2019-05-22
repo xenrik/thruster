@@ -6,8 +6,8 @@ Material:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: CrossSection
-  m_Shader: {fileID: 4800000, guid: cac325013b24d7e48a8ed895876a897d, type: 3}
+  m_Name: CrossSection-Front
+  m_Shader: {fileID: 4800000, guid: 01ba894b31d0782468eba7ff537d06df, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0

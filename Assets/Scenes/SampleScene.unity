@@ -335,7 +335,7 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RenderingLayerMask: 4294967295
   m_Materials:
-  - {fileID: 2100000, guid: 0045171d15ee3f547ae39b261ecb8003, type: 2}
+  - {fileID: 2100000, guid: dee78612403257b4e927fcd9e7680570, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -576,7 +576,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c303b85f279b28443aadea2a56fd6479, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CrossSection: {fileID: 2100000, guid: 287ccf032f5676243880aa2f2073057b, type: 2}
+  CrossSection: {fileID: 2100000, guid: c6477aa88bd40384a988af08c683ec33, type: 2}
   Standard: {fileID: 2100000, guid: 66d2e8068bd73c649a787f69a2ab5e71, type: 2}
 --- !u!1001 &532881242
 Prefab:
@@ -819,7 +819,11 @@ MonoBehaviour:
   TunnelCrossSection: {fileID: 267153548}
   TunnelAboveSurface: {fileID: 582966853}
   Stencil: {fileID: 234188551}
-  CrossSectionShader: {fileID: 4800000, guid: cac325013b24d7e48a8ed895876a897d, type: 3}
+  CrossSectionShaders:
+  - {fileID: 4800000, guid: ffc0de92273389044a1fc088b66d8887, type: 3}
+  - {fileID: 4800000, guid: 01ba894b31d0782468eba7ff537d06df, type: 3}
+  - {fileID: 4800000, guid: d977badb8d897414181f5093d079766c, type: 3}
+  - {fileID: 4800000, guid: 3433da44a6cafab46a76ebdb2eeb2cb2, type: 3}
   FadeDuration: 0.2
 --- !u!1 &582966853 stripped
 GameObject:
@@ -861,6 +865,14 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2300000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2300004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 400004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -900,7 +912,7 @@ Prefab:
     - target: {fileID: 2300000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 287ccf032f5676243880aa2f2073057b, type: 2}
+      objectReference: {fileID: 2100000, guid: c6477aa88bd40384a988af08c683ec33, type: 2}
     - target: {fileID: 2300002, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -928,7 +940,7 @@ Prefab:
     - target: {fileID: 2300004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 287ccf032f5676243880aa2f2073057b, type: 2}
+      objectReference: {fileID: 2100000, guid: c6477aa88bd40384a988af08c683ec33, type: 2}
     - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Name
       value: Tunnel2-CrossSection
@@ -945,6 +957,14 @@ Prefab:
       propertyPath: m_TagString
       value: Terrain
       objectReference: {fileID: 0}
+    - target: {fileID: 2300000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_Materials.Array.data[1]
+      value: 
+      objectReference: {fileID: 2100000, guid: a57e71c8e4eaf194dadd77dcb29553c0, type: 2}
+    - target: {fileID: 2300004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_Materials.Array.data[1]
+      value: 
+      objectReference: {fileID: 2100000, guid: a57e71c8e4eaf194dadd77dcb29553c0, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
   m_IsPrefabAsset: 0
@@ -1253,7 +1273,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1089899733}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71e26e1b39b1df04da995c5f8972f3d4, type: 3}
   m_Name: 
@@ -1307,7 +1327,7 @@ Rigidbody:
   m_Mass: 1
   m_Drag: 1
   m_AngularDrag: 2
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -2696,7 +2716,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c303b85f279b28443aadea2a56fd6479, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CrossSection: {fileID: 2100000, guid: 287ccf032f5676243880aa2f2073057b, type: 2}
+  CrossSection: {fileID: 2100000, guid: c6477aa88bd40384a988af08c683ec33, type: 2}
   Standard: {fileID: 2100000, guid: 66d2e8068bd73c649a787f69a2ab5e71, type: 2}
 --- !u!1 &2098328007 stripped
 GameObject:
