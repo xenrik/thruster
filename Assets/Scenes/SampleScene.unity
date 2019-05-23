@@ -669,6 +669,10 @@ Prefab:
       propertyPath: m_TagString
       value: Terrain
       objectReference: {fileID: 0}
+    - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
   m_IsPrefabAsset: 0
@@ -947,7 +951,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_TagString
