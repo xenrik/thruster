@@ -1,4 +1,4 @@
-﻿Shader "Custom/CrossSection/New" {
+﻿Shader "Custom/CrossSection" {
 	Properties{
 		_Color("Color", Color) = (1,1,1,1)
 		_CrossColor("Cross Section Color", Color) = (1,1,1,1)
