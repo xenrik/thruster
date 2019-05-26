@@ -319,7 +319,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &234188553
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -828,6 +828,7 @@ MonoBehaviour:
   - {fileID: 4800000, guid: 01ba894b31d0782468eba7ff537d06df, type: 3}
   - {fileID: 4800000, guid: d977badb8d897414181f5093d079766c, type: 3}
   - {fileID: 4800000, guid: 3433da44a6cafab46a76ebdb2eeb2cb2, type: 3}
+  - {fileID: 4800000, guid: e46f60a3730e6fa4e8a34595efca8a7f, type: 3}
   FadeDuration: 0.2
 --- !u!1 &582966853 stripped
 GameObject:
@@ -916,7 +917,7 @@ Prefab:
     - target: {fileID: 2300000, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: c6477aa88bd40384a988af08c683ec33, type: 2}
+      objectReference: {fileID: 2100000, guid: b91968148ebca2d438a0daac8f29c6a9, type: 2}
     - target: {fileID: 2300002, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -944,7 +945,7 @@ Prefab:
     - target: {fileID: 2300004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: c6477aa88bd40384a988af08c683ec33, type: 2}
+      objectReference: {fileID: 2100000, guid: b91968148ebca2d438a0daac8f29c6a9, type: 2}
     - target: {fileID: 100004, guid: 9b20cde39feb580458bc7357c4894798, type: 3}
       propertyPath: m_Name
       value: Tunnel2-CrossSection
