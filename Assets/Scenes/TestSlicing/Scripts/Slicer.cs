@@ -1,66 +1,46 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using BzKovSoft.ObjectSlicer;
 
-public class Slicer : MonoBehaviour {
+public class Slicer {
+    private Mesh mesh;
 
-	public GameObject Slicee;
-	public float Tolerance;
+    private object slicePos;
+    private object sliceNeg;
 
-	private Vector3 oldPosition;
-	private Plane plane;
+    public Slicer(Mesh mesh) {
+        this.mesh = mesh;
+    }
 
-	private HashSet<GameObject> slices = new HashSet<GameObject>();
+    public void slice(Plane p) {
+        Vector3[] vertices = mesh.vertices;
+        int[] triangles = mesh.triangles;
+        
+        Vector3?[] posVertices = new Vector3?[vertices.Length];
+        int?[] posTriangles = new int?[triangles.Length];
 
-	// Use this for initialization
-	void Start () {
-		oldPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-		Slicee.SetActive(false);
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		Vector3 offset = transform.position - oldPosition;
-		if (offset.magnitude > Tolerance) {
-			foreach (GameObject slice in slices) {
-				Destroy(slice);
-			}
-			slices.Clear();
+        Vector3?[] negVertices = new Vector3?[vertices.Length];
+        int?[] negTriangles = new int?[triangles.Length];
+        
+        for (int tri = 0; tri < triangles.Length; tri += 3) {
+            bool side1 = p.GetSide(vertices[tri]);
+            bool side2 = p.GetSide(vertices[tri+1]);
+            bool side3 = p.GetSide(vertices[tri+2]);
 
-			plane.SetNormalAndPosition(transform.up, transform.position);
-			Bounds b = new Bounds();
-			foreach (Renderer r in Slicee.GetComponentsInChildren<Renderer>()) {
-				b.Encapsulate(r.bounds);
-			}
-
-			if (PlaneIntersects(plane, b)) {
-				Debug.Log("Slice!");
-				GameObject copy = Instantiate(Slicee);
-
-				// Slice
-				foreach (IBzSliceableNoRepeat sliceable in copy.GetComponentsInChildren<IBzSliceableNoRepeat>()) {
-					sliceable.Slice(plane, 0, OnSliceFinished);
-				}
-
-				Slicee.SetActive(false);
-			} else {
-				Debug.Log("OOB");
-				Slicee.SetActive(true);
-			}
-
-			oldPosition = transform.position;
-		}
-	}
-
-	private void OnSliceFinished(BzSliceTryResult result) {
-		Debug.Log("Result: " + result.sliced + " - " + result.outObjectNeg + "," + result.outObjectPos);
-		slices.Add(result.outObjectNeg);
-		result.outObjectNeg.SetActive(true);
-		Destroy(result.outObjectPos);
-	}
-
-	private bool PlaneIntersects(Plane p, Bounds b) {
-		return !p.SameSide(b.min, b.max);
-	}
+            // If all the points of the triangle are on the same side,
+            // we don't need to split it.
+            if (side1 == side2 == side3) {
+                if (side1) {
+                    posVertices[tri] = vertices[tri];
+                    posVertices[tri+1] = vertices[tri+1];
+                    posVertices[tri+2] = vertices[tri+2];
+                } else {
+                    negVertices[tri] = vertices[tri];
+                    negVertices[tri+1] = vertices[tri+1];
+                    negVertices[tri+2] = vertices[tri+2];
+                }
+            } else {
+                // Split the triangle
+            }
+        }
+    }
 }

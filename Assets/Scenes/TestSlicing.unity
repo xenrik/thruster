@@ -563,11 +563,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1078879026}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f8daaac634dcd343b1ffbbcc83d1e0d, type: 3}
+  m_Script: {fileID: 11500000, guid: bf698846d57cc304f94ddeb497d5e475, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Slicee: {fileID: 1149109809}
   Tolerance: 0.01
+  RotationTolerance: 1
 --- !u!23 &1078879029
 MeshRenderer:
   m_ObjectHideFlags: 0
