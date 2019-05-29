@@ -26,6 +26,7 @@ public class Slicer {
         List<int> posTriangles = new List<int>();
         List<int> negTriangles = new List<int>();
         Triangle t = new Triangle();
+        int count = 0;
         
         for (int tri = 0; tri < triangles.Length; tri += 3) {
             t.initialise(vertices, triangles[tri], triangles[tri + 1], triangles[tri + 2], p);
@@ -34,13 +35,14 @@ public class Slicer {
             // we don't need to split it.
             if (t.aSide == t.bSide == t.cSide) {
                 if (t.aSide) {
-                    posTriangles.AddRange(new int[] { tri, tri+1, tri+2 });
+                    posTriangles.AddRange(new int[] { t.ai, t.bi, t.ci });
                 } else {
-                    negTriangles.AddRange(new int[] { tri, tri+1, tri+2 });
+                    negTriangles.AddRange(new int[] { t.ai, t.bi, t.ci });
                 }
             } else {
                 // Split the triangle
                 splitTriangle(t, p, newVertices, posTriangles, negTriangles, vertices.Length);
+                ++count;
             }
         }
 
@@ -49,21 +51,27 @@ public class Slicer {
         //    ...
         // }
 
+        Debug.Log("Split " + count + " triangles");
+        Debug.Log("Original Mesh: " + vertices.Length + " vertices, " + triangles.Length + " triangles");
+
         Vector3[] allVertices = new Vector3[vertices.Length + newVertices.Count];
         System.Array.Copy(vertices, allVertices, vertices.Length);
         newVertices.CopyTo(0, allVertices, vertices.Length, newVertices.Count);
 
-        Mesh posMesh = new Mesh();
+        posMesh = new Mesh();
         posMesh.vertices = allVertices;
         posMesh.triangles = posTriangles.ToArray();
         posMesh.RecalculateBounds();
         posMesh.RecalculateNormals();
 
-        Mesh negMesh = new Mesh();
+        negMesh = new Mesh();
         negMesh.vertices = allVertices;
         negMesh.triangles = negTriangles.ToArray();
         negMesh.RecalculateBounds();
         negMesh.RecalculateNormals();
+
+        Debug.Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length + " triangles");
+        Debug.Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length + " triangles");
     }
 
     private void splitTriangle(Triangle t, Plane p, List<Vector3> newVertices, List<int> posTriangles, List<int> negTriangles, int vertexOffset) {

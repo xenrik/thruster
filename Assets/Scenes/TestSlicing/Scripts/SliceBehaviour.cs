@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SliceBehaviour : MonoBehaviour {
-     private Slicer slicer;
+	public GameObject Slicee;
 
 	public float Tolerance = 0.01f;
 	public float RotationTolerance = 1;
+
+    private Slicer slicer;
 
 	private Vector3 oldPosition;
 	private Quaternion oldRotation;
@@ -15,8 +17,8 @@ public class SliceBehaviour : MonoBehaviour {
 	private HashSet<GameObject> slices = new HashSet<GameObject>();
 
      private void Start() {
-          MeshFilter f = GetComponent<MeshFilter>();
-          slicer = new Slicer(f.mesh);
+    	MeshFilter f = Slicee.GetComponent<MeshFilter>();
+        slicer = new Slicer(f.mesh);
 
 		oldPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
 		oldRotation = transform.rotation;
@@ -35,31 +37,33 @@ public class SliceBehaviour : MonoBehaviour {
 
 			plane.SetNormalAndPosition(transform.up, transform.position);
 			Bounds b = new Bounds();
-			foreach (Renderer r in GetComponentsInChildren<Renderer>()) {
+			foreach (Renderer r in Slicee.GetComponentsInChildren<Renderer>()) {
 				b.Encapsulate(r.bounds);
 			}
 
 			if (PlaneIntersects(plane, b)) {
 				Debug.Log("Slice!");
+				plane.Translate(Slicee.transform.position);
+				slicer.slice(plane);
+				
+				GameObject posGO = new GameObject();
+				MeshFilter posFilter = posGO.AddComponent<MeshFilter>();
+				posFilter.mesh = slicer.posMesh;
+				posGO.AddComponent<MeshRenderer>();
+				posGO.transform.position = Slicee.transform.position;
 
-                    slicer.slice(plane);
-                    
-                    GameObject posGO = new GameObject();
-                    MeshFilter posFilter = posGO.AddComponent<MeshFilter>();
-                    posFilter.mesh = slicer.posMesh;
-                    posGO.AddComponent<MeshRenderer>();
-                    
-                    GameObject negGO = new GameObject();
-                    MeshFilter negFilter = negGO.AddComponent<MeshFilter>();
-                    negFilter.mesh = slicer.negMesh;
-                    negGO.AddComponent<MeshRenderer>();
+				GameObject negGO = new GameObject();
+				MeshFilter negFilter = negGO.AddComponent<MeshFilter>();
+				negFilter.mesh = slicer.negMesh;
+				negGO.AddComponent<MeshRenderer>();
+				negGO.transform.position = Slicee.transform.position;
 
-                    slices.Add(posGO);
-                    slices.Add(negGO);
-				GetComponent<MeshRenderer>().enabled = false;
+				slices.Add(posGO);
+				slices.Add(negGO);
+				Slicee.SetActive(false);
 			} else {
 				Debug.Log("OOB");
-				GetComponent<MeshRenderer>().enabled = true;
+				Slicee.SetActive(true);
 			}
 
 			oldPosition = transform.position;
