@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class SliceBehaviour : MonoBehaviour {
 	public GameObject Slicee;
+	public Material Material;
 
 	public float Tolerance = 0.01f;
 	public float RotationTolerance = 1;
@@ -45,21 +46,28 @@ public class SliceBehaviour : MonoBehaviour {
 				Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
 				slicer.slice(plane);
+
+				MeshFilter filter;
+				MeshRenderer renderer;
 				
+				/*				
 				GameObject posGO = new GameObject();
-				MeshFilter posFilter = posGO.AddComponent<MeshFilter>();
-				posFilter.mesh = slicer.posMesh;
-				posGO.AddComponent<MeshRenderer>();
+				MeshFilter filter = posGO.AddComponent<MeshFilter>();
+				filter.mesh = slicer.posMesh;
+				MeshRenderer renderer = posGO.AddComponent<MeshRenderer>();
+				renderer.material = Material;
 				posGO.transform.position = Slicee.transform.position;
+				slices.Add(posGO);
+				*/
 
 				GameObject negGO = new GameObject();
-				MeshFilter negFilter = negGO.AddComponent<MeshFilter>();
-				negFilter.mesh = slicer.negMesh;
-				negGO.AddComponent<MeshRenderer>();
+				filter = negGO.AddComponent<MeshFilter>();
+				filter.mesh = slicer.negMesh;
+				renderer = negGO.AddComponent<MeshRenderer>();
+				renderer.material = Material;
 				negGO.transform.position = Slicee.transform.position;
-
-				slices.Add(posGO);
 				slices.Add(negGO);
+
 				Slicee.SetActive(false);
 			} else {
 				Debug.Log("OOB");

@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Slicer {
+
+    public Mesh posMesh;
+    public Mesh negMesh;
+
     private Mesh mesh;
     private bool optimise;
 
@@ -10,8 +14,11 @@ public class Slicer {
 
     private Ray ray;
 
-    public Mesh posMesh;
-    public Mesh negMesh;
+    private List<Color> colours = new List<Color>();
+    private List<Vector3> vertices = new List<Vector3>();
+
+    private List<int> posTriangles = new List<int>();
+    private List<int> negTriangles = new List<int>();
 
     public Slicer(Mesh mesh, bool optimise = false) {
         this.mesh = mesh;
@@ -19,21 +26,33 @@ public class Slicer {
     }
 
     public void slice(Plane p) {
-        Vector3[] vertices = mesh.vertices;
+        Debug.Log("Plane: " + p.distance);
+
+        Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
-        
-        List<Vector3> newVertices = new List<Vector3>();
-        List<int> posTriangles = new List<int>();
-        List<int> negTriangles = new List<int>();
+
+        vertices.Clear();
+        vertices.AddRange(existingVertices);
+
+        colours.Clear();
+        colours.AddRange(mesh.colors);
+        while (colours.Count < vertices.Count) {
+            colours.Add(Color.white);
+        }
+
+        posTriangles.Clear();
+        negTriangles.Clear();
+
         Triangle t = new Triangle();
         int count = 0;
         
+        // Slice triangles at the intersection with the plane
         for (int tri = 0; tri < triangles.Length; tri += 3) {
-            t.initialise(vertices, triangles[tri], triangles[tri + 1], triangles[tri + 2], p);
+            t.initialise(existingVertices, triangles[tri], triangles[tri + 1], triangles[tri + 2], p);
 
             // If all the points of the triangle are on the same side,
             // we don't need to split it.
-            if (t.aSide == t.bSide == t.cSide) {
+            if (t.aSide == t.bSide && t.aSide == t.cSide) {
                 if (t.aSide) {
                     posTriangles.AddRange(new int[] { t.ai, t.bi, t.ci });
                 } else {
@@ -41,7 +60,7 @@ public class Slicer {
                 }
             } else {
                 // Split the triangle
-                splitTriangle(t, p, newVertices, posTriangles, negTriangles, vertices.Length);
+                splitTriangle(t, p);
                 ++count;
             }
         }
@@ -52,40 +71,48 @@ public class Slicer {
         // }
 
         Debug.Log("Split " + count + " triangles");
-        Debug.Log("Original Mesh: " + vertices.Length + " vertices, " + triangles.Length + " triangles");
-
-        Vector3[] allVertices = new Vector3[vertices.Length + newVertices.Count];
-        System.Array.Copy(vertices, allVertices, vertices.Length);
-        newVertices.CopyTo(0, allVertices, vertices.Length, newVertices.Count);
+        Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
 
         posMesh = new Mesh();
-        posMesh.vertices = allVertices;
+        posMesh.vertices = vertices.ToArray();
         posMesh.triangles = posTriangles.ToArray();
+        posMesh.colors = colours.ToArray();
         posMesh.RecalculateBounds();
         posMesh.RecalculateNormals();
 
         negMesh = new Mesh();
-        negMesh.vertices = allVertices;
+        negMesh.vertices = vertices.ToArray();
         negMesh.triangles = negTriangles.ToArray();
+        negMesh.colors = colours.ToArray();
         negMesh.RecalculateBounds();
         negMesh.RecalculateNormals();
 
-        Debug.Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length + " triangles");
-        Debug.Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length + " triangles");
+        Debug.Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
+        Debug.Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
     }
 
-    private void splitTriangle(Triangle t, Plane p, List<Vector3> newVertices, List<int> posTriangles, List<int> negTriangles, int vertexOffset) {
+    private void splitTriangle(Triangle t, Plane p) {
+        Debug.Log("a: " + t.a + " (" + t.aSide + ") - b: " + t.b + " (" + t.bSide + ") - c: " + t.c + " (" + t.cSide + ")");
+
         // Find which edges need splitting
         bool splitAB = t.aSide != t.bSide;
         bool splitBC = t.bSide != t.cSide;
         bool splitCA = t.cSide != t.aSide;
 
-        int cut1i = vertexOffset + newVertices.Count;
+        int cut1i = vertices.Count;
         int cut2i = cut1i + 1;
 
         if (splitAB && splitBC) {
-            newVertices.Add(getCut(t.a, t.b, p)); // cut1
-            newVertices.Add(getCut(t.b, t.c, p)); // cut2
+            Debug.Log("--- Plane.Raycast(a,b)");
+            Vector3 cut1 = getCut(t.a, t.b, p);
+            Debug.Log("--- Plane.Raycast(b,c)");
+            Vector3 cut2 = getCut(t.b, t.c, p);
+            if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
+
+            vertices.Add(cut1); vertices.Add(cut2);
+
+            colours.Add(Color.red);
+            colours.Add(Color.blue);
 
             if (t.aSide) {
                 posTriangles.AddRange(new int[] { t.ai, cut1i, cut2i });
@@ -97,8 +124,16 @@ public class Slicer {
                 negTriangles.AddRange(new int[] { cut2i, t.ci, t.ai });
             }
         } else if (splitAB && splitCA) {
-            newVertices.Add(getCut(t.a, t.b, p)); // cut1
-            newVertices.Add(getCut(t.c, t.a, p)); // cut2
+            Debug.Log("--- Plane.Raycast(a,b)");
+            Vector3 cut1 = getCut(t.a, t.b, p);
+            Debug.Log("--- Plane.Raycast(c,a)");
+            Vector3 cut2 = getCut(t.c, t.a, p);
+            if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
+
+            vertices.Add(cut1); vertices.Add(cut2);
+
+            colours.Add(Color.yellow);
+            colours.Add(Color.green);
 
             if (t.aSide) {
                 posTriangles.AddRange(new int[] { t.ai, cut1i, cut2i });
@@ -111,13 +146,21 @@ public class Slicer {
             }
         } else {
             // Must be splitBC && splitCA
-            newVertices.Add(getCut(t.b, t.c, p)); // cut1
-            newVertices.Add(getCut(t.c, t.a, p)); // cut2
+            Debug.Log("--- Plane.Raycast(b,c)");
+            Vector3 cut1 = getCut(t.b, t.c, p);
+            Debug.Log("--- Plane.Raycast(c,a)");
+            Vector3 cut2 = getCut(t.c, t.a, p);
+            if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
+
+            vertices.Add(cut1); vertices.Add(cut2);
+
+            colours.Add(Color.cyan);
+            colours.Add(Color.magenta);
 
             if (t.aSide) {
                 posTriangles.AddRange(new int[] { t.ai, cut1i, cut2i });
                 posTriangles.AddRange(new int[] { t.ai, t.bi, cut1i });
-                negTriangles.AddRange(new int[] { cut1i, t.ci, cut2i });
+                negTriangles.AddRange(new int[] { cut1i, t.ci, cut2i });                
             } else {
                 negTriangles.AddRange(new int[] { t.ai, cut1i, cut2i });
                 negTriangles.AddRange(new int[] { t.ai, t.bi, cut1i });
@@ -130,7 +173,9 @@ public class Slicer {
         ray.origin = a;
         ray.direction = b - a;
         float length;
-        if (!p.Raycast(ray, out length)) {
+
+        bool result = p.Raycast(ray, out length);
+        if (!result && length == 0) {
             // Something went wrong!
             Debug.Log("Unexpectedly didn't intersect the plane?");
             return Vector3.zero;
