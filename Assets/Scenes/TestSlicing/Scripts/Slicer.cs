@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class Slicer {
 
+    public enum FillType { GRID };
+
     public Mesh posMesh;
     public Mesh negMesh;
 
@@ -19,17 +21,18 @@ public class Slicer {
 
     private List<int> posTriangles = new List<int>();
     private List<int> negTriangles = new List<int>();
+    private List<Edge> edges = new List<Edge>();
 
-    public Slicer(Mesh mesh, bool optimise = false) {
+    public Slicer(Mesh mesh, bool optimise = false, FillType fillType = FillType.GRID) {
         this.mesh = mesh;
         this.optimise = optimise;
     }
 
     public void slice(Plane p) {
-        Debug.Log("Plane: " + p.distance);
 
         Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
+        Vector3[] normals = mesh.normals;
 
         vertices.Clear();
         vertices.AddRange(existingVertices);
@@ -42,6 +45,7 @@ public class Slicer {
 
         posTriangles.Clear();
         negTriangles.Clear();
+        edges.Clear();
 
         Triangle t = new Triangle();
         int count = 0;
@@ -64,6 +68,9 @@ public class Slicer {
                 ++count;
             }
         }
+
+        // Fill the holes with a grid of triangles (support more types in future)
+        fillHolesGrid();
 
         // TODO - Optimise
         // if (optimise) {
@@ -110,6 +117,7 @@ public class Slicer {
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
             vertices.Add(cut1); vertices.Add(cut2);
+            edges.Add(new Edge(cut1, cut2, t.normal));
 
             colours.Add(Color.red);
             colours.Add(Color.blue);
@@ -131,6 +139,7 @@ public class Slicer {
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
             vertices.Add(cut1); vertices.Add(cut2);
+            edges.Add(new Edge(cut1, cut2, t.normal));
 
             colours.Add(Color.yellow);
             colours.Add(Color.green);
@@ -153,6 +162,7 @@ public class Slicer {
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
             vertices.Add(cut1); vertices.Add(cut2);
+            edges.Add(new Edge(cut1, cut2, t.normal));
 
             colours.Add(Color.cyan);
             colours.Add(Color.magenta);
@@ -184,6 +194,17 @@ public class Slicer {
         return ray.GetPoint(length);
     }
 
+    private void fillHolesGrid() {
+        // Find the bounds of the intersection between the mesh and the plane
+        Bounds b = new Bounds();
+        foreach (Edge e in edges) {
+            b.Encapsulate(e.a);
+            b.Encapsulate(e.b);
+        }
+
+
+    }
+
     private struct Triangle {
         public int ai;
         public Vector3 a;
@@ -197,6 +218,8 @@ public class Slicer {
         public Vector3 c;
         public bool cSide;
 
+        public Vector3 normal;
+
         public void initialise(Vector3[] vertices, int ai, int bi, int ci, Plane p) {
             this.ai = ai;
             a = vertices[ai];
@@ -209,6 +232,29 @@ public class Slicer {
             this.ci = ci;
             c = vertices[ci];
             cSide = p.GetSide(c);
+
+            normal = Vector3.Cross(b - a, b - c).normalized;
+        }
+    }
+
+    private struct Edge {
+        public Vector3 a;
+        public Vector3 b;
+
+        public Vector3 direction;
+        public Vector3 normal;
+
+        public Edge(Vector3 a, Vector3 b, Vector3 normal) {
+            this.a = a;
+            this.b = b;
+            this.normal = normal;
+
+            direction = (b - a).normalized;
+        }
+
+        public int getSide(Vector3 p) {
+            float d = Vector3.Dot(Vector3.Cross(p - a, direction), normal);
+            return d < 0 ? -1 : d > 0 ? 1 : 0;
         }
     }
 }
