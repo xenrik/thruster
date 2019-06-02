@@ -355,11 +355,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f4632c73f02881247bda20bae169be51, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.747
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f4632c73f02881247bda20bae169be51, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.09678983
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f4632c73f02881247bda20bae169be51, type: 3}
       propertyPath: m_LocalRotation.x
@@ -670,7 +670,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16a2b48e42547814c96e3f35222fc2e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Slicee: {fileID: 161173495}
+  Slicee: {fileID: 1149109809}
   Material: {fileID: 2100000, guid: dc1de1a5a32e90e42aa43a2e438939d5, type: 2}
   Tolerance: 0.01
   RotationTolerance: 1
@@ -722,13 +722,13 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1078879026}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.2266135, y: 0, z: 0.09678983}
+  m_LocalRotation: {x: -0.16744675, y: -0, z: -0, w: 0.9858812}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 7
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -19.279001, y: 0, z: 0}
 --- !u!1 &1092211857
 GameObject:
   m_ObjectHideFlags: 0
@@ -891,7 +891,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1149109809}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f1088a895afd1b49b487ceec931fb5e, type: 3}
   m_Name: 

@@ -69,16 +69,16 @@ public class Slicer {
             }
         }
 
-        // Fill the holes with a grid of triangles (support more types in future)
-        fillHolesGrid();
+        // Fill the holes
+        fillHolesGrid(p);
 
         // TODO - Optimise
         // if (optimise) {
         //    ...
         // }
 
-        Debug.Log("Split " + count + " triangles");
-        Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
+        //Debug.Log("Split " + count + " triangles");
+        //Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
 
         posMesh = new Mesh();
         posMesh.vertices = vertices.ToArray();
@@ -94,13 +94,11 @@ public class Slicer {
         negMesh.RecalculateBounds();
         negMesh.RecalculateNormals();
 
-        Debug.Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
-        Debug.Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
+        //Debug.Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
+        //Debug.Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
     }
 
     private void splitTriangle(Triangle t, Plane p) {
-        Debug.Log("a: " + t.a + " (" + t.aSide + ") - b: " + t.b + " (" + t.bSide + ") - c: " + t.c + " (" + t.cSide + ")");
-
         // Find which edges need splitting
         bool splitAB = t.aSide != t.bSide;
         bool splitBC = t.bSide != t.cSide;
@@ -110,9 +108,7 @@ public class Slicer {
         int cut2i = cut1i + 1;
 
         if (splitAB && splitBC) {
-            Debug.Log("--- Plane.Raycast(a,b)");
             Vector3 cut1 = getCut(t.a, t.b, p);
-            Debug.Log("--- Plane.Raycast(b,c)");
             Vector3 cut2 = getCut(t.b, t.c, p);
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
@@ -132,9 +128,7 @@ public class Slicer {
                 negTriangles.AddRange(new int[] { cut2i, t.ci, t.ai });
             }
         } else if (splitAB && splitCA) {
-            Debug.Log("--- Plane.Raycast(a,b)");
             Vector3 cut1 = getCut(t.a, t.b, p);
-            Debug.Log("--- Plane.Raycast(c,a)");
             Vector3 cut2 = getCut(t.c, t.a, p);
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
@@ -155,9 +149,7 @@ public class Slicer {
             }
         } else {
             // Must be splitBC && splitCA
-            Debug.Log("--- Plane.Raycast(b,c)");
             Vector3 cut1 = getCut(t.b, t.c, p);
-            Debug.Log("--- Plane.Raycast(c,a)");
             Vector3 cut2 = getCut(t.c, t.a, p);
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
@@ -194,16 +186,20 @@ public class Slicer {
         return ray.GetPoint(length);
     }
 
-    private void fillHolesGrid() {
-        // Find the bounds of the intersection between the mesh and the plane
-        Bounds b = new Bounds();
+    private void fillHolesGrid(Plane p) {
+        // Rotate the edges to be on a horizontal plane at the origin
+        Quaternion up = Quaternion.Euler(Vector3.up);
+        Quaternion inorm = Quaternion.Inverse(Quaternion.LookRotation(p.normal));
+        Quaternion rot = up * inorm;
+
+        List<Vector2> perimiter = new List<Vector2>();
         foreach (Edge e in edges) {
-            b.Encapsulate(e.a);
-            b.Encapsulate(e.b);
+            Vector3 rotated = rot * (e.a - (p.distance * p.normal));
+            perimiter.Add(rotated);            
         }
-
-
+        
     }
+
 
     private struct Triangle {
         public int ai;

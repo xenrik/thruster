@@ -63,9 +63,11 @@ public class BzSlicer : MonoBehaviour {
 
 	private void OnSliceFinished(BzSliceTryResult result) {
 		Debug.Log("Result: " + result.sliced + " - " + result.outObjectNeg + "," + result.outObjectPos);
-		slices.Add(result.outObjectNeg);
-		result.outObjectNeg.SetActive(true);
-		Destroy(result.outObjectPos);
+		if (result.sliced) {
+			slices.Add(result.outObjectNeg);
+			result.outObjectNeg.SetActive(true);
+			Destroy(result.outObjectPos);
+		}
 	}
 
 	private bool PlaneIntersects(Plane p, Bounds b) {

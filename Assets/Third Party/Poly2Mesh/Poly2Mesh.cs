@@ -144,6 +144,7 @@ public static class Poly2Mesh {
 		}
 
 		// Create the UV list, by looking up the closest point for each in our poly
+		/*
 		Vector2[] uv = null;
 		if (polygon.outsideUVs != null) {
 			uv = new Vector2[vertexList.Count];
@@ -151,12 +152,13 @@ public static class Poly2Mesh {
 				uv[i] = polygon.ClosestUV(vertexList[i]);
 			}
 		}
+		*/
 		
 		// Create the mesh
 		Mesh msh = new Mesh();
 		msh.vertices = vertexList.ToArray();
 		msh.triangles = indices;
-		msh.uv = uv;
+		//msh.uv = uv;
 		msh.RecalculateNormals();
 		msh.RecalculateBounds();
 		return msh;
