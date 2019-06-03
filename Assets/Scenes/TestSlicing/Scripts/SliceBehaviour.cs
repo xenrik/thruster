@@ -50,15 +50,13 @@ public class SliceBehaviour : MonoBehaviour {
 				MeshFilter filter;
 				MeshRenderer renderer;
 				
-				/*				
 				GameObject posGO = new GameObject();
-				MeshFilter filter = posGO.AddComponent<MeshFilter>();
+				filter = posGO.AddComponent<MeshFilter>();
 				filter.mesh = slicer.posMesh;
-				MeshRenderer renderer = posGO.AddComponent<MeshRenderer>();
+				renderer = posGO.AddComponent<MeshRenderer>();
 				renderer.material = Material;
 				posGO.transform.position = Slicee.transform.position;
 				slices.Add(posGO);
-				*/
 
 				GameObject negGO = new GameObject();
 				filter = negGO.AddComponent<MeshFilter>();

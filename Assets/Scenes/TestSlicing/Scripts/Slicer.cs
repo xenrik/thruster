@@ -70,7 +70,7 @@ public class Slicer {
         }
 
         // Fill the holes
-        fillHolesGrid(p);
+        fillHolesBowyerWatson(p);
 
         // TODO - Optimise
         // if (optimise) {
@@ -115,7 +115,7 @@ public class Slicer {
             vertices.Add(cut1); vertices.Add(cut2);
             edges.Add(new Edge(cut1, cut2, t.normal));
 
-            colours.Add(Color.red);
+            colours.Add(Color.blue);
             colours.Add(Color.blue);
 
             if (t.aSide) {
@@ -135,8 +135,8 @@ public class Slicer {
             vertices.Add(cut1); vertices.Add(cut2);
             edges.Add(new Edge(cut1, cut2, t.normal));
 
-            colours.Add(Color.yellow);
-            colours.Add(Color.green);
+            colours.Add(Color.blue);
+            colours.Add(Color.blue);
 
             if (t.aSide) {
                 posTriangles.AddRange(new int[] { t.ai, cut1i, cut2i });
@@ -156,8 +156,8 @@ public class Slicer {
             vertices.Add(cut1); vertices.Add(cut2);
             edges.Add(new Edge(cut1, cut2, t.normal));
 
-            colours.Add(Color.cyan);
-            colours.Add(Color.magenta);
+            colours.Add(Color.blue);
+            colours.Add(Color.blue);
 
             if (t.aSide) {
                 posTriangles.AddRange(new int[] { t.ai, cut1i, cut2i });
@@ -186,20 +186,155 @@ public class Slicer {
         return ray.GetPoint(length);
     }
 
-    private void fillHolesGrid(Plane p) {
+    private void fillHolesBowyerWatson(Plane p) {
         // Rotate the edges to be on a horizontal plane at the origin
         Quaternion up = Quaternion.Euler(Vector3.up);
-        Quaternion inorm = Quaternion.Inverse(Quaternion.LookRotation(p.normal));
+        Quaternion planeRot = Quaternion.LookRotation(p.normal);
+        Quaternion inorm = Quaternion.Inverse(planeRot);
         Quaternion rot = up * inorm;
 
-        List<Vector2> perimiter = new List<Vector2>();
+        HashSet<Vector2> perimiter = new HashSet<Vector2>();
+        Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
+        Vector2 max = new Vector2(float.MinValue, float.MinValue);
         foreach (Edge e in edges) {
-            Vector3 rotated = rot * (e.a - (p.distance * p.normal));
-            perimiter.Add(rotated);            
+            rotateAndAdd(e.a, rot, p, perimiter, ref min, ref max);
+            rotateAndAdd(e.b, rot, p, perimiter, ref min, ref max);
         }
-        
+
+        // Find and add the super-triangle
+        HashSet<Triangle2D> triangles = new HashSet<Triangle2D>();
+        Triangle2D superTriangle = findSuperTriangle(min, max);
+        Debug.Log("superTriangle: " + superTriangle);
+
+        triangles.Add(superTriangle);
+
+        // Calculate the triangle list
+        HashSet<Edge2D> polygon = new HashSet<Edge2D>();
+        HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
+        foreach (Vector2 point in perimiter) {
+            badTriangles.Clear();
+            foreach (Triangle2D tri in triangles) {
+                if (tri.Contains(point)) {
+                    badTriangles.Add(tri);
+                    break;
+                }
+            }
+
+            polygon.Clear();
+            foreach (Triangle2D tri in badTriangles) {
+                triangles.Remove(tri);
+
+                polygon.Add(new Edge2D(tri.a, tri.b));
+                polygon.Add(new Edge2D(tri.b, tri.c));
+                polygon.Add(new Edge2D(tri.c, tri.a));
+            }
+
+            foreach (Edge2D edge in polygon) {
+                triangles.Add(new Triangle2D(edge.a, edge.b, point));
+            }
+        }
+
+        // Cleanup
+        badTriangles.Clear();
+        foreach (Triangle2D tri in triangles) {
+            if (tri.Contains(superTriangle.a) || tri.Contains(superTriangle.b) || 
+                    tri.Contains(superTriangle.c)) {
+                badTriangles.Add(tri);
+            }
+        }
+        foreach (Triangle2D tri in badTriangles) {
+            triangles.Remove(tri);
+        }
+
+        // Reorient and add to both the positivie and negative triangle lists
+        foreach (Triangle2D tri in triangles) {
+            Triangle tri3d = new Triangle();
+            tri3d.a = tri.a;
+            tri3d.a = (planeRot * tri3d.a) + (p.distance * p.normal);
+            tri3d.ai = vertices.Count;
+
+            tri3d.b = tri.b;
+            tri3d.b = (planeRot * tri3d.b) + (p.distance * p.normal);
+            tri3d.bi = vertices.Count + 1;
+
+            tri3d.c = tri.c;
+            tri3d.c = (planeRot * tri3d.c) + (p.distance * p.normal);
+            tri3d.ci = vertices.Count + 2;
+
+            Debug.Log("--- " + tri + " => " + tri3d);
+
+            vertices.Add(tri3d.a); colours.Add(Color.red);
+            vertices.Add(tri3d.b); colours.Add(Color.green);
+            vertices.Add(tri3d.c); colours.Add(Color.yellow);
+
+            posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
+            negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
+        }
     }
 
+    private void rotateAndAdd(Vector3 v, Quaternion rot, Plane p, HashSet<Vector2> perimiter, ref Vector2 min, ref Vector2 max) {
+        Vector3 rotated = rot * (v - (p.distance * p.normal));
+        perimiter.Add(rotated);            
+        
+        min.x = Mathf.Min(min.x, rotated.x);
+        min.y = Mathf.Min(min.y, rotated.y);
+        max.x = Mathf.Max(max.x, rotated.x);
+        max.y = Mathf.Max(max.y, rotated.y);
+    }
+
+    /**
+     * Find a triangle that encompases the given min and max bounding points
+     */
+    private Triangle2D findSuperTriangle(Vector2 min, Vector2 max) {
+        float dx = max.x - min.x;
+        float dy = max.y - min.y;
+
+        Triangle2D triangle;
+        triangle.a.x = min.x - dx;
+        triangle.a.y = min.y;
+
+        triangle.b.x = max.x + dx;
+        triangle.b.y = min.y;
+
+        triangle.c.x = min.x + dx / 2;
+        triangle.c.y = max.y + dy;
+
+        return triangle;
+    }
+
+    private struct Triangle2D {
+        public Vector2 a;
+        public Vector2 b;
+        public Vector2 c;
+        
+        public Triangle2D(Vector2 a, Vector2 b, Vector2 c) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+
+        public bool Contains(Vector2 p) {
+            return false;
+        }
+
+        public override string ToString() {
+            return $"[{a},{b},{c}]";
+        }
+    }
+
+    public struct Edge2D {
+        public Vector2 a;
+        public Vector2 b;
+
+        public Edge2D(Vector2 a, Vector2 b) {
+            this.a = a;
+            this.b = b;
+        }
+
+        public override string ToString() {
+            return $"[{a},{b}]";
+        }
+    }
 
     private struct Triangle {
         public int ai;
@@ -230,6 +365,10 @@ public class Slicer {
             cSide = p.GetSide(c);
 
             normal = Vector3.Cross(b - a, b - c).normalized;
+        }
+
+        public override string ToString() {
+            return $"[{a},{b},{c}]";
         }
     }
 
