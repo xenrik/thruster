@@ -60,20 +60,17 @@
      <Compile Include="Assets\Third Party\MKGlowFree\Editor\MinMaxRangeDrawer.cs" />
      <Compile Include="Assets\Third Party\MKGlowFree\Editor\MKGlowEditor.cs" />
      <Compile Include="Assets\Third Party\MKGlowFree\Editor\SelectiveStandardShaderGUI.cs" />
- <Reference Include="Unity.TextMeshPro.Editor">
- <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
- </Reference>
- <Reference Include="Unity.PackageManagerUI.Editor">
- <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
- </Reference>
- <Reference Include="Unity.TextMeshPro">
- <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
- </Reference>
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
  </Reference>
  <Reference Include="com.unity.multiplayer-hlapi.Editor">
  <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/com.unity.multiplayer-hlapi.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.TextMeshPro.Editor">
+ <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.PackageManagerUI.Editor">
+ <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
  </Reference>
  <Reference Include="Unity.Timeline">
  <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
@@ -92,6 +89,9 @@
  </Reference>
  <Reference Include="UnityEngine.SpatialTracking">
  <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/UnityEngine.SpatialTracking.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.TextMeshPro">
+ <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
  </Reference>
  <Reference Include="Unity.Analytics.DataPrivacy">
  <HintPath>C:/Programming/Unity/Thruster/Library/ScriptAssemblies/Unity.Analytics.DataPrivacy.dll</HintPath>

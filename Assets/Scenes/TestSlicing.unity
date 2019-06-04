@@ -717,6 +717,7 @@ MonoBehaviour:
   Material: {fileID: 2100000, guid: dc1de1a5a32e90e42aa43a2e438939d5, type: 2}
   Tolerance: 0.01
   RotationTolerance: 1
+  DebugSpeed: 1
 --- !u!23 &1078879029
 MeshRenderer:
   m_ObjectHideFlags: 0

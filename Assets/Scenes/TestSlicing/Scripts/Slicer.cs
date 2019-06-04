@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
 public class Slicer {
@@ -29,6 +31,12 @@ public class Slicer {
     }
 
     public void slice(Plane p) {
+        foreach (SlicerDebug debug in sliceDebug(p)) {
+            // Loop
+        }
+    }
+
+    public IEnumerable<SlicerDebug> sliceDebug(Plane p) {
 
         Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
@@ -70,7 +78,9 @@ public class Slicer {
         }
 
         // Fill the holes
-        fillHolesBowyerWatson(p);
+        foreach (SlicerDebug debug in fillHolesBowyerWatson(p)) {
+            yield return debug;
+        }
 
         // TODO - Optimise
         // if (optimise) {
@@ -186,7 +196,13 @@ public class Slicer {
         return ray.GetPoint(length);
     }
 
-    private void fillHolesBowyerWatson(Plane p) {
+    private IEnumerable<SlicerDebug> fillHolesBowyerWatson(Plane p) {
+        SlicerDebug debug;
+        debug.vertices = new List<Vector3>(vertices);
+        debug.posTriangles = new List<int>(posTriangles);
+        debug.negTriangles = new List<int>(negTriangles);
+        debug.colours = new List<Color>(colours);
+
         // Rotate the edges to be on a horizontal plane at the origin
         Quaternion up = Quaternion.Euler(Vector3.up);
         Quaternion planeRot = Quaternion.LookRotation(p.normal);
@@ -214,7 +230,7 @@ public class Slicer {
         foreach (Vector2 point in perimiter) {
             badTriangles.Clear();
             foreach (Triangle2D tri in triangles) {
-                if (tri.Contains(point)) {
+                if (tri.CircumcircleContains(point)) {
                     badTriangles.Add(tri);
                     break;
                 }
@@ -232,13 +248,16 @@ public class Slicer {
             foreach (Edge2D edge in polygon) {
                 triangles.Add(new Triangle2D(edge.a, edge.b, point));
             }
+
+            Debug.Log("?");
+            yield return fillDebug(triangles, p, planeRot);;
         }
 
         // Cleanup
         badTriangles.Clear();
         foreach (Triangle2D tri in triangles) {
-            if (tri.Contains(superTriangle.a) || tri.Contains(superTriangle.b) || 
-                    tri.Contains(superTriangle.c)) {
+            if (tri.ContainsPoint(superTriangle.a) || tri.ContainsPoint(superTriangle.b) || 
+                    tri.ContainsPoint(superTriangle.c)) {
                 badTriangles.Add(tri);
             }
         }
@@ -250,18 +269,18 @@ public class Slicer {
         foreach (Triangle2D tri in triangles) {
             Triangle tri3d = new Triangle();
             tri3d.a = tri.a;
-            tri3d.a = (planeRot * tri3d.a) + (p.distance * p.normal);
+            tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
             tri3d.ai = vertices.Count;
 
             tri3d.b = tri.b;
-            tri3d.b = (planeRot * tri3d.b) + (p.distance * p.normal);
+            tri3d.b = (planeRot * tri3d.b) - (p.distance * p.normal);
             tri3d.bi = vertices.Count + 1;
 
             tri3d.c = tri.c;
-            tri3d.c = (planeRot * tri3d.c) + (p.distance * p.normal);
+            tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
             tri3d.ci = vertices.Count + 2;
 
-            Debug.Log("--- " + tri + " => " + tri3d);
+            //Debug.Log("--- " + tri + " => " + tri3d);
 
             vertices.Add(tri3d.a); colours.Add(Color.red);
             vertices.Add(tri3d.b); colours.Add(Color.green);
@@ -270,6 +289,41 @@ public class Slicer {
             posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
             negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
         }
+    }
+
+    private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot) {
+        SlicerDebug debug;
+        debug.vertices = new List<Vector3>(vertices);
+        debug.posTriangles = new List<int>(posTriangles);
+        debug.negTriangles = new List<int>(negTriangles);
+        debug.colours = new List<Color>(colours);
+
+        // Reorient and add to both the positivie and negative triangle lists
+        foreach (Triangle2D tri in triangles) {
+            Triangle tri3d = new Triangle();
+            tri3d.a = tri.a;
+            tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
+            tri3d.ai = vertices.Count;
+
+            tri3d.b = tri.b;
+            tri3d.b = (planeRot * tri3d.b) - (p.distance * p.normal);
+            tri3d.bi = vertices.Count + 1;
+
+            tri3d.c = tri.c;
+            tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
+            tri3d.ci = vertices.Count + 2;
+
+            //Debug.Log("--- " + tri + " => " + tri3d);
+
+            debug.vertices.Add(tri3d.a); debug.colours.Add(Color.red);
+            debug.vertices.Add(tri3d.b); debug.colours.Add(Color.green);
+            debug.vertices.Add(tri3d.c); debug.colours.Add(Color.yellow);
+
+            debug.posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
+            debug.negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
+        }
+
+        return debug;
     }
 
     private void rotateAndAdd(Vector3 v, Quaternion rot, Plane p, HashSet<Vector2> perimiter, ref Vector2 min, ref Vector2 max) {
@@ -299,6 +353,9 @@ public class Slicer {
         triangle.c.x = min.x + dx / 2;
         triangle.c.y = max.y + dy;
 
+        triangle.circumcircleRadiusSq = 0;
+        triangle.circumcircleOrigin = Vector2.zero;
+
         return triangle;
     }
 
@@ -306,15 +363,99 @@ public class Slicer {
         public Vector2 a;
         public Vector2 b;
         public Vector2 c;
-        
+
+        public Vector2 circumcircleOrigin;
+        public float circumcircleRadiusSq;
+
         public Triangle2D(Vector2 a, Vector2 b, Vector2 c) {
             this.a = a;
             this.b = b;
             this.c = c;
+
+            this.circumcircleOrigin = Vector2.zero;
+            this.circumcircleRadiusSq = 0;
         }
 
-        public bool Contains(Vector2 p) {
-            return false;
+        public bool CircumcircleContains(Vector2 p) {
+            if (circumcircleRadiusSq == 0) {
+                calculateCircumcircle();
+            }
+
+            float dx = p.x - circumcircleOrigin.x;
+            float dy = p.y - circumcircleOrigin.y;
+            float rsq = dx*dx + dy*dy;
+
+            return rsq < circumcircleRadiusSq;
+        }
+
+        // Based on https://stackoverflow.com/a/9755252/2467874
+        public bool ContainsPoint(Vector2 p) {
+            float aSideX = p.x - a.x;
+            float aSideY = p.y - a.y;
+
+            bool sideAB = (b.x - a.x) * aSideY - (b.y-a.y) * aSideX > 0;
+            bool sideAC = (c.x - a.x) * aSideY - (c.y-a.y) * aSideX > 0;
+
+            if (sideAB == sideAC) {
+                return false;
+            }
+
+            float bSideX = p.y - b.x;
+            float bSideY = p.y - b.y;
+            bool sideCB = (c.x - b.x) * bSideY - (c.y-b.y) * bSideX > 0;
+
+            if (sideCB == sideAB) {
+                return false;
+            }
+
+            return true;
+        }
+
+        // Based on https://gist.github.com/mutoo/5617691#gistcomment-1329247
+        private void calculateCircumcircle() {
+            float ayby = Mathf.Abs(a.y - b.y);
+            float bycy = Mathf.Abs(b.y - c.y);
+
+            if (ayby < Mathf.Epsilon && bycy < Mathf.Epsilon) {
+                // We have no size!
+                return;
+            }
+
+            float xc = 0, yc = 0;
+
+            if (ayby < Mathf.Epsilon) {
+                float m = -((c.x - b.x) / (c.y - b.y));
+                float mx = (b.x + c.x) / 2.0f;
+                float my = (b.y + c.y) / 2.0f;
+
+                xc = (b.x + a.y) / 2.0f;
+                yc = m * (xc - mx) + my;
+            } else if (bycy < Mathf.Epsilon) {
+                float m = -((b.x - a.x) / (b.y - a.y));
+                float mx = (a.x + b.x) / 2.0f;
+                float my = (a.y + b.y) / 2.0f;
+
+                xc = (c.x + b.x) / 2.0f;
+                yc = m * (xc - mx) + my;
+            } else {
+                float m1 = -((b.x - a.x) / (b.y - a.y));
+                float m1x = (a.x + b.x) / 2.0f;
+                float m1y = (a.y + b.y) / 2.0f;
+
+                float m2 = -((c.x - b.x) / (c.y - b.y));
+                float m2x = (b.x + c.x) / 2.0f;
+                float m2y = (b.y + c.y) / 2.0f;
+
+                xc = (m1 * m1x - m2 * m2x + m2y - m1y) / (m1 - m2);
+                yc = (ayby > bycy) ? m1 * (xc - m1x) + m1y : m2 * (xc - m2x) + m2y;
+            }
+
+            circumcircleOrigin.x = xc;
+            circumcircleOrigin.y = yc;
+
+            float dx = b.x - xc;
+            float dy = b.y - yc;
+            circumcircleRadiusSq = dx*dx + dy*dy;
         }
 
         public override string ToString() {
@@ -391,5 +532,13 @@ public class Slicer {
             float d = Vector3.Dot(Vector3.Cross(p - a, direction), normal);
             return d < 0 ? -1 : d > 0 ? 1 : 0;
         }
+    }
+
+    public struct SlicerDebug {
+        public List<Color> colours;
+        public List<Vector3> vertices;
+
+        public List<int> posTriangles;
+        public List<int> negTriangles;
     }
 }

@@ -1,0 +1,3 @@
+Slicer.cs
+- Uses circumcircle technique from https://gist.github.com/mutoo/5617691#gistcomment-1329247
+- Uses trigon contains point from https://stackoverflow.com/a/9755252/2467874
