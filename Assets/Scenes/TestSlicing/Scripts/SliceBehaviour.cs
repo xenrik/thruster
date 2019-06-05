@@ -10,6 +10,7 @@ public class SliceBehaviour : MonoBehaviour {
 	public float RotationTolerance = 1;
 
 	public float DebugSpeed = 0.1f;
+	public bool DebugBreak = true;
 
     private Slicer slicer;
 
@@ -19,8 +20,9 @@ public class SliceBehaviour : MonoBehaviour {
 	private Plane plane;
 
 	private HashSet<GameObject> slices = new HashSet<GameObject>();
+	private Slicer.SlicerDebug? debug;
 
-     private void Start() {
+    private void Start() {
     	MeshFilter f = Slicee.GetComponent<MeshFilter>();
         slicer = new Slicer(f.mesh);
 
@@ -118,6 +120,8 @@ public class SliceBehaviour : MonoBehaviour {
 		negFilter.mesh = negMesh;
 
 		foreach (Slicer.SlicerDebug result in slicer.sliceDebug(plane)) {
+			debug = result;
+
         	posMesh.vertices = result.vertices.ToArray();
         	posMesh.triangles = result.posTriangles.ToArray();
         	posMesh.colors = result.colours.ToArray();
@@ -136,10 +140,27 @@ public class SliceBehaviour : MonoBehaviour {
 				ttl += Time.deltaTime;
 			}
 
-			Debug.Log("!");
+			if (DebugBreak) {
+				Debug.Break();
+				yield return null;
+			}
 		}
 
 		posFilter.mesh = slicer.posMesh;
 		negFilter.mesh = slicer.negMesh;
+		debug = null;
+		Debug.Log("Finished!");
+	}
+
+	private void OnDrawGizmos() {
+		if (this.debug == null) {
+			return;
+		}
+
+		Slicer.SlicerDebug debug = (Slicer.SlicerDebug)this.debug;
+		Gizmos.color = Color.red;
+		foreach (Vector3 point in debug.perimiter) {
+			Gizmos.DrawSphere(point, 0.02f);
+		}
 	}
 }

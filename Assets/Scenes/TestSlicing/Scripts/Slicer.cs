@@ -228,9 +228,11 @@ public class Slicer {
         HashSet<Edge2D> polygon = new HashSet<Edge2D>();
         HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
         foreach (Vector2 point in perimiter) {
+            Debug.Log("---");
             badTriangles.Clear();
             foreach (Triangle2D tri in triangles) {
                 if (tri.CircumcircleContains(point)) {
+                    Debug.Log("badTriangle: " + tri + " (for point: " + point + ")");
                     badTriangles.Add(tri);
                     break;
                 }
@@ -246,10 +248,11 @@ public class Slicer {
             }
 
             foreach (Edge2D edge in polygon) {
-                triangles.Add(new Triangle2D(edge.a, edge.b, point));
+                Triangle2D tri = new Triangle2D(edge.a, edge.b, point);
+                Debug.Log("newTriangle: " + tri);
+                triangles.Add(tri);
             }
 
-            Debug.Log("?");
             yield return fillDebug(triangles, p, planeRot);;
         }
 
@@ -293,25 +296,38 @@ public class Slicer {
 
     private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot) {
         SlicerDebug debug;
+        debug.perimiter = new HashSet<Vector3>();
+        foreach (Edge e in edges) {
+            debug.perimiter.Add(e.a);
+            debug.perimiter.Add(e.b);
+        }
+
+        debug.vertices = new List<Vector3>();
+        debug.posTriangles = new List<int>();
+        debug.negTriangles = new List<int>();
+        debug.colours = new List<Color>();
+
+        /*
         debug.vertices = new List<Vector3>(vertices);
         debug.posTriangles = new List<int>(posTriangles);
         debug.negTriangles = new List<int>(negTriangles);
         debug.colours = new List<Color>(colours);
+        */
 
         // Reorient and add to both the positivie and negative triangle lists
         foreach (Triangle2D tri in triangles) {
             Triangle tri3d = new Triangle();
             tri3d.a = tri.a;
             tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
-            tri3d.ai = vertices.Count;
+            tri3d.ai = debug.vertices.Count;
 
             tri3d.b = tri.b;
             tri3d.b = (planeRot * tri3d.b) - (p.distance * p.normal);
-            tri3d.bi = vertices.Count + 1;
+            tri3d.bi = debug.vertices.Count + 1;
 
             tri3d.c = tri.c;
             tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
-            tri3d.ci = vertices.Count + 2;
+            tri3d.ci = debug.vertices.Count + 2;
 
             //Debug.Log("--- " + tri + " => " + tri3d);
 
@@ -390,6 +406,10 @@ public class Slicer {
 
         // Based on https://stackoverflow.com/a/9755252/2467874
         public bool ContainsPoint(Vector2 p) {
+            if (a.Equals(p) || b.Equals(p) || c.Equals(p)) {
+                return true;
+            }
+            
             float aSideX = p.x - a.x;
             float aSideY = p.y - a.y;
 
@@ -461,6 +481,19 @@ public class Slicer {
         public override string ToString() {
             return $"[{a},{b},{c}]";
         }
+
+        public override bool Equals(object obj) {
+            if (!(obj is Triangle2D)) {
+                return false;
+            }
+
+            Triangle2D other = (Triangle2D)obj;
+            return a.Equals(other.a) && b.Equals(other.b) && c.Equals(other.c);
+        }
+
+        public override int GetHashCode() {
+            return a.GetHashCode() ^ b.GetHashCode() ^ c.GetHashCode();
+        }
     }
 
     public struct Edge2D {
@@ -474,6 +507,19 @@ public class Slicer {
 
         public override string ToString() {
             return $"[{a},{b}]";
+        }
+
+        public override bool Equals(object obj) {
+            if (!(obj is Edge2D)) {
+                return false;
+            }
+
+            Edge2D other = (Edge2D)obj;
+            return a.Equals(other.a) && b.Equals(other.b);
+        }
+
+        public override int GetHashCode() {
+            return a.GetHashCode() ^ b.GetHashCode();
         }
     }
 
@@ -535,6 +581,8 @@ public class Slicer {
     }
 
     public struct SlicerDebug {
+        public HashSet<Vector3> perimiter;
+
         public List<Color> colours;
         public List<Vector3> vertices;
 
