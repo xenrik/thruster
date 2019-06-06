@@ -219,13 +219,14 @@ public class Slicer {
 
         // Find and add the super-triangle
         HashSet<Triangle2D> triangles = new HashSet<Triangle2D>();
-        Triangle2D superTriangle = findSuperTriangle(min, max);
+        Triangle2D superTriangle = findSuperTriangle(min - new Vector2(1, 1), max + new Vector2(1, 1));
         Debug.Log("superTriangle: " + superTriangle);
 
         triangles.Add(superTriangle);
 
         // Calculate the triangle list
-        HashSet<Edge2D> polygon = new HashSet<Edge2D>();
+        HashSet<Edge2D> polygon = new HashSet<Edge2D>(new EdgeEquivalenceComparator());
+        HashSet<Edge2D> badEdges = new HashSet<Edge2D>(new EdgeEquivalenceComparator());
         HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
         foreach (Vector2 point in perimiter) {
             Debug.Log("---");
@@ -234,17 +235,58 @@ public class Slicer {
                 if (tri.CircumcircleContains(point)) {
                     Debug.Log("badTriangle: " + tri + " (for point: " + point + ")");
                     badTriangles.Add(tri);
-                    break;
+                    //break;
+                    
                 }
             }
 
+            yield return fillDebug(triangles, p, planeRot, badTriangles, point);
+
             polygon.Clear();
+            badEdges.Clear();
+
             foreach (Triangle2D tri in badTriangles) {
                 triangles.Remove(tri);
 
-                polygon.Add(new Edge2D(tri.a, tri.b));
-                polygon.Add(new Edge2D(tri.b, tri.c));
-                polygon.Add(new Edge2D(tri.c, tri.a));
+                Edge2D ab = new Edge2D(tri.a, tri.b);
+                if (!badEdges.Contains(ab)) {
+                    if (polygon.Contains(ab)) {
+                        polygon.Remove(ab);
+                        badEdges.Add(ab);
+                    } else {
+                        polygon.Add(ab);
+                    }
+                }
+
+                Edge2D bc = new Edge2D(tri.b, tri.c);
+                if (!badEdges.Contains(bc)) {
+                    if (polygon.Contains(bc)) {
+                        polygon.Remove(bc);
+                        badEdges.Add(bc);
+                    } else {
+                        polygon.Add(bc);
+                    }
+                }
+
+                Edge2D ca = new Edge2D(tri.c, tri.a);
+                if (!badEdges.Contains(ca)) {
+                    if (polygon.Contains(ca)) {
+                        polygon.Remove(ca);
+                        badEdges.Add(ca);
+                    } else {
+                        polygon.Add(ca);
+                    }
+                }
+            }
+
+            Debug.Log("Unique Edges: ");
+            foreach (Edge2D edge in polygon) {
+                Debug.Log("- " + edge);
+            }
+
+            Debug.Log("Duplicate Edges: ");
+            foreach (Edge2D edge in badEdges) {
+                Debug.Log("- " + edge);
             }
 
             foreach (Edge2D edge in polygon) {
@@ -253,7 +295,7 @@ public class Slicer {
                 triangles.Add(tri);
             }
 
-            yield return fillDebug(triangles, p, planeRot);;
+            yield return fillDebug(triangles, p, planeRot);
         }
 
         // Cleanup
@@ -294,12 +336,38 @@ public class Slicer {
         }
     }
 
-    private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot) {
+    private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot, HashSet<Triangle2D> badTriangles = null, Vector2? testPoint = null) {
         SlicerDebug debug;
         debug.perimiter = new HashSet<Vector3>();
         foreach (Edge e in edges) {
             debug.perimiter.Add(e.a);
             debug.perimiter.Add(e.b);
+        }
+
+        if (badTriangles != null) {
+            debug.badTriangles = new List<Vector3>();
+            foreach (Triangle2D tri in badTriangles) {
+                Vector3 point = tri.a;
+                point = (planeRot * point) - (p.distance * p.normal);
+                debug.badTriangles.Add(point);
+
+                point = tri.b;
+                point = (planeRot * point) - (p.distance * p.normal);
+                debug.badTriangles.Add(point);
+
+                point = tri.c;
+                point = (planeRot * point) - (p.distance * p.normal);
+                debug.badTriangles.Add(point);
+            }
+        } else {
+            debug.badTriangles = null;
+        }
+
+        if (testPoint != null) {
+            debug.testPoint = (Vector2)testPoint;
+            debug.testPoint = (planeRot * debug.testPoint) - (p.distance * p.normal);
+        } else {
+            debug.testPoint = Vector3.positiveInfinity;
         }
 
         debug.vertices = new List<Vector3>();
@@ -402,6 +470,7 @@ public class Slicer {
             float rsq = dx*dx + dy*dy;
 
             return rsq < circumcircleRadiusSq;
+            //return Mathf.Sqrt(rsq) < Mathf.Sqrt(circumcircleRadiusSq);
         }
 
         // Based on https://stackoverflow.com/a/9755252/2467874
@@ -409,7 +478,7 @@ public class Slicer {
             if (a.Equals(p) || b.Equals(p) || c.Equals(p)) {
                 return true;
             }
-            
+            /* 
             float aSideX = p.x - a.x;
             float aSideY = p.y - a.y;
 
@@ -427,8 +496,10 @@ public class Slicer {
             if (sideCB == sideAB) {
                 return false;
             }
-
             return true;
+            */
+
+            return false;
         }
 
         // Based on https://gist.github.com/mutoo/5617691#gistcomment-1329247
@@ -496,7 +567,7 @@ public class Slicer {
         }
     }
 
-    public struct Edge2D {
+    private struct Edge2D {
         public Vector2 a;
         public Vector2 b;
 
@@ -588,5 +659,26 @@ public class Slicer {
 
         public List<int> posTriangles;
         public List<int> negTriangles;
+
+        public List<Vector3> badTriangles;
+        public Vector3 testPoint;
+    }
+
+    private class EdgeEquivalenceComparator : IEqualityComparer<Edge2D> {
+        public bool Equals(Edge2D a, Edge2D b) {
+            if (a.a.x == b.a.x && a.a.y == b.a.y &&
+                a.b.x == b.b.x && a.b.y == b.b.y) {
+                return true;
+            } else if (a.a.x == b.b.x && a.a.y == b.b.y &&
+                a.b.x == b.a.x && a.b.y == b.a.y) {
+                return true;
+            }
+
+            return false;
+        }
+
+        public int GetHashCode(Edge2D obj) {
+            return obj.GetHashCode();   
+        }
     }
 }

@@ -713,7 +713,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16a2b48e42547814c96e3f35222fc2e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Slicee: {fileID: 1146113113}
+  Slicee: {fileID: 1149109809}
   Material: {fileID: 2100000, guid: dc1de1a5a32e90e42aa43a2e438939d5, type: 2}
   Tolerance: 0.01
   RotationTolerance: 1

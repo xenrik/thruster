@@ -52,7 +52,9 @@ public class SliceBehaviour : MonoBehaviour {
 			if (PlaneIntersects(plane, b)) {
 				Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
-				StartCoroutine(slice(plane));
+				
+				//StartCoroutine(sliceDebug(plane));
+				slice(plane);
 
 				Slicee.SetActive(false);
 			} else {
@@ -93,7 +95,40 @@ public class SliceBehaviour : MonoBehaviour {
 		return false;
 	}
 
-	private IEnumerator slice(Plane p) {
+	
+	private void slice(Plane p) {
+		MeshRenderer renderer;
+
+		GameObject posGO = new GameObject();
+		posGO.transform.position = Slicee.transform.position;
+		slices.Add(posGO);
+
+		renderer = posGO.AddComponent<MeshRenderer>();
+		renderer.material = Material;
+
+		MeshFilter posFilter = posGO.AddComponent<MeshFilter>();
+		Mesh posMesh = new Mesh();
+		posFilter.mesh = posMesh;
+
+		GameObject negGO = new GameObject();
+		negGO.transform.position = Slicee.transform.position;
+		slices.Add(negGO);
+
+		renderer = negGO.AddComponent<MeshRenderer>();
+		renderer.material = Material;
+
+		MeshFilter negFilter = negGO.AddComponent<MeshFilter>();
+
+		Mesh negMesh = new Mesh();
+		negFilter.mesh = negMesh;
+
+		slicer.slice(plane);
+
+		posFilter.mesh = slicer.posMesh;
+		negFilter.mesh = slicer.negMesh;
+	}
+
+	private IEnumerator sliceDebug(Plane p) {
 		MeshRenderer renderer;
 
 		GameObject posGO = new GameObject();
@@ -158,9 +193,52 @@ public class SliceBehaviour : MonoBehaviour {
 		}
 
 		Slicer.SlicerDebug debug = (Slicer.SlicerDebug)this.debug;
-		Gizmos.color = Color.red;
+		Gizmos.color = Color.yellow;
 		foreach (Vector3 point in debug.perimiter) {
-			Gizmos.DrawSphere(point, 0.02f);
+			Gizmos.DrawSphere(point, 0.05f);
+		}
+		if (debug.badTriangles != null) {
+			Gizmos.color = Color.red;
+			for (int i = 0; i < debug.badTriangles.Count; i+=3) {
+				DrawLine(debug.badTriangles[i], debug.badTriangles[i+1], 5);
+				DrawLine(debug.badTriangles[i+1], debug.badTriangles[i+2], 5);
+				DrawLine(debug.badTriangles[i+2], debug.badTriangles[i], 5);
+			}
+		}
+		if (debug.testPoint != Vector3.positiveInfinity) {
+			Gizmos.color = Color.blue;
+			Gizmos.DrawSphere(debug.testPoint, 0.05f);
 		}
 	}
+
+	public static void DrawLine(Vector3 p1, Vector3 p2, float width)
+ {
+     int count = 1 + Mathf.CeilToInt(width); // how many lines are needed.
+     if (count == 1)
+     {
+         Gizmos.DrawLine(p1, p2);
+     }
+     else
+     {
+         Camera c = Camera.current;
+         if (c == null)
+         {
+             Debug.LogError("Camera.current is null");
+             return;
+         }
+         var scp1 = c.WorldToScreenPoint(p1);
+         var scp2 = c.WorldToScreenPoint(p2);
+ 
+         Vector3 v1 = (scp2 - scp1).normalized; // line direction
+         Vector3 n = Vector3.Cross(v1, Vector3.forward); // normal vector
+ 
+         for (int i = 0; i < count; i++)
+         {
+             Vector3 o = 0.99f * n * width * ((float)i / (count - 1) - 0.5f);
+             Vector3 origin = c.ScreenToWorldPoint(scp1 + o);
+             Vector3 destiny = c.ScreenToWorldPoint(scp2 + o);
+             Gizmos.DrawLine(origin, destiny);
+         }
+     }
+ }
 }
