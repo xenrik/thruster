@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -230,6 +231,8 @@ public class Slicer {
         HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
         foreach (Vector2 point in perimiter) {
             Debug.Log("---");
+            Debug.Log("Triangles: " + triangles.Count);
+
             badTriangles.Clear();
             foreach (Triangle2D tri in triangles) {
                 if (tri.CircumcircleContains(point)) {
@@ -244,9 +247,9 @@ public class Slicer {
 
             polygon.Clear();
             badEdges.Clear();
-
             foreach (Triangle2D tri in badTriangles) {
                 triangles.Remove(tri);
+                Debug.Log("Removed triangle: " + tri + " (" + triangles.Count + " left)");
 
                 Edge2D ab = new Edge2D(tri.a, tri.b);
                 if (!badEdges.Contains(ab)) {
@@ -279,14 +282,16 @@ public class Slicer {
                 }
             }
 
+            int i = 0;
             Debug.Log("Unique Edges: ");
             foreach (Edge2D edge in polygon) {
-                Debug.Log("- " + edge);
+                Debug.Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
             }
 
+            i = 0;
             Debug.Log("Duplicate Edges: ");
             foreach (Edge2D edge in badEdges) {
-                Debug.Log("- " + edge);
+                Debug.Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
             }
 
             foreach (Edge2D edge in polygon) {
@@ -301,8 +306,8 @@ public class Slicer {
         // Cleanup
         badTriangles.Clear();
         foreach (Triangle2D tri in triangles) {
-            if (tri.ContainsPoint(superTriangle.a) || tri.ContainsPoint(superTriangle.b) || 
-                    tri.ContainsPoint(superTriangle.c)) {
+            if (tri.HasPoint(superTriangle.a) || tri.HasPoint(superTriangle.b) || 
+                    tri.HasPoint(superTriangle.c)) {
                 badTriangles.Add(tri);
             }
         }
@@ -340,8 +345,13 @@ public class Slicer {
         SlicerDebug debug;
         debug.perimiter = new HashSet<Vector3>();
         foreach (Edge e in edges) {
-            debug.perimiter.Add(e.a);
-            debug.perimiter.Add(e.b);
+            Vector3 point = e.a;
+            //point = (planeRot * point) - (p.distance * p.normal);
+            debug.perimiter.Add(point);
+
+            point = e.b;
+            //point = (planeRot * point) - (p.distance * p.normal);
+            debug.perimiter.Add(point);
         }
 
         if (badTriangles != null) {
@@ -427,29 +437,22 @@ public class Slicer {
         float dx = max.x - min.x;
         float dy = max.y - min.y;
 
-        Triangle2D triangle;
-        triangle.a.x = min.x - dx;
-        triangle.a.y = min.y;
+        Vector2 ta = new Vector2(min.x - dx, min.y);
+        Vector2 tb = new Vector2(max.x + dx, min.y);
+        Vector2 tc = new Vector2(min.x + dx / 2, max.y + dy);
 
-        triangle.b.x = max.x + dx;
-        triangle.b.y = min.y;
-
-        triangle.c.x = min.x + dx / 2;
-        triangle.c.y = max.y + dy;
-
-        triangle.circumcircleRadiusSq = 0;
-        triangle.circumcircleOrigin = Vector2.zero;
-
-        return triangle;
+        return new Triangle2D(ta, tb, tc);
     }
 
     private struct Triangle2D {
-        public Vector2 a;
-        public Vector2 b;
-        public Vector2 c;
+        public Vector2 a { get; }
+        public Vector2 b { get; }
+        public Vector2 c { get; }
 
-        public Vector2 circumcircleOrigin;
-        public float circumcircleRadiusSq;
+        public Vector2 circumcircleOrigin { get; private set; }
+        public float circumcircleRadiusSq { get; private set; }
+
+        private int hashCode;
 
         public Triangle2D(Vector2 a, Vector2 b, Vector2 c) {
             this.a = a;
@@ -458,6 +461,14 @@ public class Slicer {
 
             this.circumcircleOrigin = Vector2.zero;
             this.circumcircleRadiusSq = 0;
+
+            int prime = 31;
+            hashCode = Math.Round(this.a.x, 2).GetHashCode();
+            hashCode = hashCode * prime + Math.Round(this.a.y, 2).GetHashCode();
+            hashCode = hashCode * prime + Math.Round(this.b.x, 2).GetHashCode();
+            hashCode = hashCode * prime + Math.Round(this.b.y, 2).GetHashCode();
+            hashCode = hashCode * prime + Math.Round(this.c.x, 2).GetHashCode();
+            hashCode = hashCode * prime + Math.Round(this.c.y, 2).GetHashCode();
         }
 
         public bool CircumcircleContains(Vector2 p) {
@@ -474,7 +485,7 @@ public class Slicer {
         }
 
         // Based on https://stackoverflow.com/a/9755252/2467874
-        public bool ContainsPoint(Vector2 p) {
+        public bool HasPoint(Vector2 p) {
             if (a.Equals(p) || b.Equals(p) || c.Equals(p)) {
                 return true;
             }
@@ -541,8 +552,7 @@ public class Slicer {
                 yc = (ayby > bycy) ? m1 * (xc - m1x) + m1y : m2 * (xc - m2x) + m2y;
             }
 
-            circumcircleOrigin.x = xc;
-            circumcircleOrigin.y = yc;
+            circumcircleOrigin = new Vector2(xc, yc);
 
             float dx = b.x - xc;
             float dy = b.y - yc;
@@ -563,17 +573,27 @@ public class Slicer {
         }
 
         public override int GetHashCode() {
-            return a.GetHashCode() ^ b.GetHashCode() ^ c.GetHashCode();
+            return hashCode;
         }
     }
 
     private struct Edge2D {
-        public Vector2 a;
-        public Vector2 b;
+        public Vector2 a { get; }
+        public Vector2 b { get; }
+        public int hashCode;
 
         public Edge2D(Vector2 a, Vector2 b) {
             this.a = a;
             this.b = b;
+
+            int prime = 31;
+            int hashCodeA = Math.Round(this.a.x, 2).GetHashCode();
+            hashCodeA = hashCodeA * prime + Math.Round(this.a.y, 2).GetHashCode();
+
+            int hashCodeB = Math.Round(this.b.x, 2).GetHashCode();
+            hashCodeB = hashCodeB * prime + Math.Round(this.b.y, 2).GetHashCode();
+
+            hashCode = hashCodeA ^ hashCodeB;
         }
 
         public override string ToString() {
@@ -586,11 +606,12 @@ public class Slicer {
             }
 
             Edge2D other = (Edge2D)obj;
-            return a.Equals(other.a) && b.Equals(other.b);
+            float d = (a.x - b.x) + (a.y - b.y);
+            return d < Mathf.Epsilon;
         }
 
         public override int GetHashCode() {
-            return a.GetHashCode() ^ b.GetHashCode();
+            return hashCode;
         }
     }
 
@@ -666,11 +687,15 @@ public class Slicer {
 
     private class EdgeEquivalenceComparator : IEqualityComparer<Edge2D> {
         public bool Equals(Edge2D a, Edge2D b) {
-            if (a.a.x == b.a.x && a.a.y == b.a.y &&
-                a.b.x == b.b.x && a.b.y == b.b.y) {
+            float d = (a.a.x - b.a.x) + (a.a.y - b.a.y) + 
+                (a.b.x - b.b.x) + (a.b.y - b.b.y);
+            if (d < Mathf.Epsilon) {
                 return true;
-            } else if (a.a.x == b.b.x && a.a.y == b.b.y &&
-                a.b.x == b.a.x && a.b.y == b.a.y) {
+            }
+
+            d = (a.a.x - b.b.x) + (a.a.y - b.b.y) + 
+                (a.b.x - b.a.x) + (a.b.y - b.a.y);
+            if (d < Mathf.Epsilon) {
                 return true;
             }
 

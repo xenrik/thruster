@@ -53,8 +53,8 @@ public class SliceBehaviour : MonoBehaviour {
 				Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
 				
-				//StartCoroutine(sliceDebug(plane));
-				slice(plane);
+				StartCoroutine(sliceDebug(plane));
+				//slice(plane);
 
 				Slicee.SetActive(false);
 			} else {
@@ -192,22 +192,23 @@ public class SliceBehaviour : MonoBehaviour {
 			return;
 		}
 
+		Vector3 offset = Slicee.transform.position;
 		Slicer.SlicerDebug debug = (Slicer.SlicerDebug)this.debug;
 		Gizmos.color = Color.yellow;
 		foreach (Vector3 point in debug.perimiter) {
-			Gizmos.DrawSphere(point, 0.05f);
+			Gizmos.DrawSphere(point + offset, 0.025f);
 		}
 		if (debug.badTriangles != null) {
 			Gizmos.color = Color.red;
 			for (int i = 0; i < debug.badTriangles.Count; i+=3) {
-				DrawLine(debug.badTriangles[i], debug.badTriangles[i+1], 5);
-				DrawLine(debug.badTriangles[i+1], debug.badTriangles[i+2], 5);
-				DrawLine(debug.badTriangles[i+2], debug.badTriangles[i], 5);
+				DrawLine(debug.badTriangles[i] + offset, debug.badTriangles[i+1] + offset, 5);
+				DrawLine(debug.badTriangles[i+1] + offset, debug.badTriangles[i+2] + offset, 5);
+				DrawLine(debug.badTriangles[i+2] + offset, debug.badTriangles[i] + offset, 5);
 			}
 		}
 		if (debug.testPoint != Vector3.positiveInfinity) {
 			Gizmos.color = Color.blue;
-			Gizmos.DrawSphere(debug.testPoint, 0.05f);
+			Gizmos.DrawSphere(debug.testPoint + offset, 0.025f);
 		}
 	}
 
