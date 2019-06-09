@@ -1,16 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class SliceBehaviour : MonoBehaviour {
 	public GameObject Slicee;
 	public Material Material;
 
+	public bool ShowDebug;
+	public float DebugSpeed = 0.1f;
+
 	public float Tolerance = 0.01f;
 	public float RotationTolerance = 1;
 
-	public float DebugSpeed = 0.1f;
-	public bool DebugBreak = true;
 
     private Slicer slicer;
 
@@ -53,8 +55,11 @@ public class SliceBehaviour : MonoBehaviour {
 				Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
 				
-				StartCoroutine(sliceDebug(plane));
-				//slice(plane);
+				if (ShowDebug) {
+					StartCoroutine(sliceDebug(plane));
+				} else {
+					slice(plane);
+				}
 
 				Slicee.SetActive(false);
 			} else {
@@ -154,18 +159,38 @@ public class SliceBehaviour : MonoBehaviour {
 		Mesh negMesh = new Mesh();
 		negFilter.mesh = negMesh;
 
+		List<Vector3> verts = new List<Vector3>();
+		List<Color> colors = new List<Color>();
+		List<int> posTris = new List<int>();
+		List<int> negTris = new List<int>();
+
 		foreach (Slicer.SlicerDebug result in slicer.sliceDebug(plane)) {
 			debug = result;
 
-        	posMesh.vertices = result.vertices.ToArray();
-        	posMesh.triangles = result.posTriangles.ToArray();
-        	posMesh.colors = result.colours.ToArray();
+			verts.Clear();
+			colors.Clear();
+			posTris.Clear();
+			negTris.Clear();
+
+			int idx = 0;
+			foreach (Triangle3D tri in result.allTriangles) {				
+				verts.Add(tri.a); verts.Add(tri.b); verts.Add(tri.c);
+				colors.Add(tri.color); colors.Add(tri.color); colors.Add(tri.color);
+
+				posTris.Add(idx); posTris.Add(idx + 1); posTris.Add(idx + 2);
+				negTris.Add(idx+2); negTris.Add(idx + 1); negTris.Add(idx);
+				idx += 3;
+			}
+
+        	posMesh.vertices = verts.ToArray();
+        	posMesh.colors = colors.ToArray();
+        	posMesh.triangles = posTris.ToArray();
         	posMesh.RecalculateBounds();
         	posMesh.RecalculateNormals();
 
-	        negMesh.vertices = result.vertices.ToArray();
-        	negMesh.triangles = result.negTriangles.ToArray();
-        	negMesh.colors = result.colours.ToArray();
+	        negMesh.vertices = posMesh.vertices;
+        	negMesh.colors = negMesh.colors;
+        	negMesh.triangles = negTris.ToArray();
         	negMesh.RecalculateBounds();
         	negMesh.RecalculateNormals();
 
@@ -175,10 +200,8 @@ public class SliceBehaviour : MonoBehaviour {
 				ttl += Time.deltaTime;
 			}
 
-			if (DebugBreak) {
-				Debug.Break();
-				yield return null;
-			}
+			Debug.Break();
+			yield return null;
 		}
 
 		posFilter.mesh = slicer.posMesh;
@@ -194,52 +217,32 @@ public class SliceBehaviour : MonoBehaviour {
 
 		Vector3 offset = Slicee.transform.position;
 		Slicer.SlicerDebug debug = (Slicer.SlicerDebug)this.debug;
-		Gizmos.color = Color.yellow;
+		Gizmos.color = Color.white;
 		foreach (Vector3 point in debug.perimiter) {
 			Gizmos.DrawSphere(point + offset, 0.025f);
 		}
-		if (debug.badTriangles != null) {
-			Gizmos.color = Color.red;
-			for (int i = 0; i < debug.badTriangles.Count; i+=3) {
-				DrawLine(debug.badTriangles[i] + offset, debug.badTriangles[i+1] + offset, 5);
-				DrawLine(debug.badTriangles[i+1] + offset, debug.badTriangles[i+2] + offset, 5);
-				DrawLine(debug.badTriangles[i+2] + offset, debug.badTriangles[i] + offset, 5);
-			}
+
+		foreach (Triangle3D tri in debug.allTriangles) {
+			Gizmos.color = tri.color;
+			MoreGizmos.DrawCircle(tri.circumcircleOrigin + offset, plane.normal, tri.circumcircleRadius, 5);
 		}
+
+		float speed = 5;
+		foreach (Triangle3D tri in debug.badTriangles) {
+			Color c = Color.red;
+			c.a = (Mathf.Sin((float)EditorApplication.timeSinceStartup * speed) + 1) / 2;
+			Gizmos.color = c;
+			
+			MoreGizmos.DrawCircle(tri.circumcircleOrigin + offset, plane.normal, tri.circumcircleRadius, 5);
+
+			MoreGizmos.DrawLine(tri.a + offset, tri.b + offset, 5);
+			MoreGizmos.DrawLine(tri.b + offset, tri.c + offset, 5);
+			MoreGizmos.DrawLine(tri.c + offset, tri.a + offset, 5);
+		}
+
 		if (debug.testPoint != Vector3.positiveInfinity) {
 			Gizmos.color = Color.blue;
 			Gizmos.DrawSphere(debug.testPoint + offset, 0.025f);
 		}
 	}
-
-	public static void DrawLine(Vector3 p1, Vector3 p2, float width)
- {
-     int count = 1 + Mathf.CeilToInt(width); // how many lines are needed.
-     if (count == 1)
-     {
-         Gizmos.DrawLine(p1, p2);
-     }
-     else
-     {
-         Camera c = Camera.current;
-         if (c == null)
-         {
-             Debug.LogError("Camera.current is null");
-             return;
-         }
-         var scp1 = c.WorldToScreenPoint(p1);
-         var scp2 = c.WorldToScreenPoint(p2);
- 
-         Vector3 v1 = (scp2 - scp1).normalized; // line direction
-         Vector3 n = Vector3.Cross(v1, Vector3.forward); // normal vector
- 
-         for (int i = 0; i < count; i++)
-         {
-             Vector3 o = 0.99f * n * width * ((float)i / (count - 1) - 0.5f);
-             Vector3 origin = c.ScreenToWorldPoint(scp1 + o);
-             Vector3 destiny = c.ScreenToWorldPoint(scp2 + o);
-             Gizmos.DrawLine(origin, destiny);
-         }
-     }
- }
 }

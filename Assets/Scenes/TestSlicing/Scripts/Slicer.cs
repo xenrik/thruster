@@ -24,7 +24,10 @@ public class Slicer {
 
     private List<int> posTriangles = new List<int>();
     private List<int> negTriangles = new List<int>();
-    private List<Edge> edges = new List<Edge>();
+    private List<Edge3D> edges = new List<Edge3D>();
+    private HashSet<Point2D> perimiter = new HashSet<Point2D>();
+
+    private bool debugging = false;
 
     public Slicer(Mesh mesh, bool optimise = false, FillType fillType = FillType.GRID) {
         this.mesh = mesh;
@@ -32,13 +35,19 @@ public class Slicer {
     }
 
     public void slice(Plane p) {
-        foreach (SlicerDebug debug in sliceDebug(p)) {
+        foreach (SlicerDebug debug in doSliceDebug(p)) {
             // Loop
         }
     }
 
     public IEnumerable<SlicerDebug> sliceDebug(Plane p) {
+        debugging = true;
+        foreach (SlicerDebug debug in doSliceDebug(p)) {
+            yield return debug;
+        }
+    }
 
+    private IEnumerable<SlicerDebug> doSliceDebug(Plane p) {
         Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
         Vector3[] normals = mesh.normals;
@@ -56,7 +65,7 @@ public class Slicer {
         negTriangles.Clear();
         edges.Clear();
 
-        Triangle t = new Triangle();
+        Triangle3D t = new Triangle3D();
         int count = 0;
         
         // Slice triangles at the intersection with the plane
@@ -88,8 +97,8 @@ public class Slicer {
         //    ...
         // }
 
-        //Debug.Log("Split " + count + " triangles");
-        //Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
+        //Log("Split " + count + " triangles");
+        //Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
 
         posMesh = new Mesh();
         posMesh.vertices = vertices.ToArray();
@@ -105,11 +114,11 @@ public class Slicer {
         negMesh.RecalculateBounds();
         negMesh.RecalculateNormals();
 
-        //Debug.Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
-        //Debug.Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
+        //Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
+        //Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
     }
 
-    private void splitTriangle(Triangle t, Plane p) {
+    private void splitTriangle(Triangle3D t, Plane p) {
         // Find which edges need splitting
         bool splitAB = t.aSide != t.bSide;
         bool splitBC = t.bSide != t.cSide;
@@ -124,7 +133,7 @@ public class Slicer {
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
             vertices.Add(cut1); vertices.Add(cut2);
-            edges.Add(new Edge(cut1, cut2, t.normal));
+            edges.Add(new Edge3D(cut1, cut2, t.normal));
 
             colours.Add(Color.blue);
             colours.Add(Color.blue);
@@ -144,7 +153,7 @@ public class Slicer {
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
             vertices.Add(cut1); vertices.Add(cut2);
-            edges.Add(new Edge(cut1, cut2, t.normal));
+            edges.Add(new Edge3D(cut1, cut2, t.normal));
 
             colours.Add(Color.blue);
             colours.Add(Color.blue);
@@ -165,7 +174,7 @@ public class Slicer {
             if (cut1 == Vector3.zero || cut2 == Vector3.zero) { return; }
 
             vertices.Add(cut1); vertices.Add(cut2);
-            edges.Add(new Edge(cut1, cut2, t.normal));
+            edges.Add(new Edge3D(cut1, cut2, t.normal));
 
             colours.Add(Color.blue);
             colours.Add(Color.blue);
@@ -182,6 +191,12 @@ public class Slicer {
         }
     }
 
+    private void Log(String msg) {
+        if (debugging) {
+            Debug.Log(msg);
+        }
+    }
+
     private Vector3 getCut(Vector3 a, Vector3 b, Plane p) {
         ray.origin = a;
         ray.direction = b - a;
@@ -190,7 +205,7 @@ public class Slicer {
         bool result = p.Raycast(ray, out length);
         if (!result && length == 0) {
             // Something went wrong!
-            Debug.Log("Unexpectedly didn't intersect the plane?");
+            Log("Unexpectedly didn't intersect the plane?");
             return Vector3.zero;
         }
 
@@ -198,45 +213,42 @@ public class Slicer {
     }
 
     private IEnumerable<SlicerDebug> fillHolesBowyerWatson(Plane p) {
-        SlicerDebug debug;
-        debug.vertices = new List<Vector3>(vertices);
-        debug.posTriangles = new List<int>(posTriangles);
-        debug.negTriangles = new List<int>(negTriangles);
-        debug.colours = new List<Color>(colours);
-
         // Rotate the edges to be on a horizontal plane at the origin
         Quaternion up = Quaternion.Euler(Vector3.up);
         Quaternion planeRot = Quaternion.LookRotation(p.normal);
         Quaternion inorm = Quaternion.Inverse(planeRot);
         Quaternion rot = up * inorm;
 
-        HashSet<Vector2> perimiter = new HashSet<Vector2>();
-        Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
-        Vector2 max = new Vector2(float.MinValue, float.MinValue);
-        foreach (Edge e in edges) {
-            rotateAndAdd(e.a, rot, p, perimiter, ref min, ref max);
-            rotateAndAdd(e.b, rot, p, perimiter, ref min, ref max);
+        perimiter.Clear();
+
+        Point2D min = new Point2D(float.MaxValue, float.MaxValue);
+        Point2D max = new Point2D(float.MinValue, float.MinValue);
+        foreach (Edge3D e in edges) {
+            Point2D a = rotateAndAdd(e.a, rot, p, perimiter, ref min, ref max);
+            Point2D b = rotateAndAdd(e.b, rot, p, perimiter, ref min, ref max);
         }
+         
+        Log($"Perimiter has {perimiter.Count} points");
 
         // Find and add the super-triangle
         HashSet<Triangle2D> triangles = new HashSet<Triangle2D>();
-        Triangle2D superTriangle = findSuperTriangle(min - new Vector2(1, 1), max + new Vector2(1, 1));
-        Debug.Log("superTriangle: " + superTriangle);
+        Triangle2D superTriangle = findSuperTriangle(min - new Point2D(1, 1), max + new Point2D(1, 1));
+        Log("superTriangle: " + superTriangle);
 
         triangles.Add(superTriangle);
 
         // Calculate the triangle list
-        HashSet<Edge2D> polygon = new HashSet<Edge2D>(new EdgeEquivalenceComparator());
-        HashSet<Edge2D> badEdges = new HashSet<Edge2D>(new EdgeEquivalenceComparator());
+        HashSet<Edge2D> polygon = new HashSet<Edge2D>(new Edge2D.EquivalentComparator());
+        HashSet<Edge2D> badEdges = new HashSet<Edge2D>(new Edge2D.EquivalentComparator());
         HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
-        foreach (Vector2 point in perimiter) {
-            Debug.Log("---");
-            Debug.Log("Triangles: " + triangles.Count);
+        foreach (Point2D point in perimiter) {
+            Log("---");
+            Log("Triangles: " + triangles.Count);
 
             badTriangles.Clear();
             foreach (Triangle2D tri in triangles) {
                 if (tri.CircumcircleContains(point)) {
-                    Debug.Log("badTriangle: " + tri + " (for point: " + point + ")");
+                    Log("badTriangle: " + tri + " (for point: " + point + ")");
                     badTriangles.Add(tri);
                     //break;
                     
@@ -249,7 +261,7 @@ public class Slicer {
             badEdges.Clear();
             foreach (Triangle2D tri in badTriangles) {
                 triangles.Remove(tri);
-                Debug.Log("Removed triangle: " + tri + " (" + triangles.Count + " left)");
+                Log("Removed triangle: " + tri + " (" + triangles.Count + " left)");
 
                 Edge2D ab = new Edge2D(tri.a, tri.b);
                 if (!badEdges.Contains(ab)) {
@@ -283,20 +295,20 @@ public class Slicer {
             }
 
             int i = 0;
-            Debug.Log("Unique Edges: ");
+            Log("Unique Edges: ");
             foreach (Edge2D edge in polygon) {
-                Debug.Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
+                Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
             }
 
             i = 0;
-            Debug.Log("Duplicate Edges: ");
+            Log("Duplicate Edges: ");
             foreach (Edge2D edge in badEdges) {
-                Debug.Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
+                Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
             }
 
             foreach (Edge2D edge in polygon) {
                 Triangle2D tri = new Triangle2D(edge.a, edge.b, point);
-                Debug.Log("newTriangle: " + tri);
+                Log("newTriangle: " + tri);
                 triangles.Add(tri);
             }
 
@@ -317,7 +329,7 @@ public class Slicer {
 
         // Reorient and add to both the positivie and negative triangle lists
         foreach (Triangle2D tri in triangles) {
-            Triangle tri3d = new Triangle();
+            Triangle3D tri3d = new Triangle3D();
             tri3d.a = tri.a;
             tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
             tri3d.ai = vertices.Count;
@@ -330,7 +342,7 @@ public class Slicer {
             tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
             tri3d.ci = vertices.Count + 2;
 
-            //Debug.Log("--- " + tri + " => " + tri3d);
+            //Log("--- " + tri + " => " + tri3d);
 
             vertices.Add(tri3d.a); colours.Add(Color.red);
             vertices.Add(tri3d.b); colours.Add(Color.green);
@@ -341,369 +353,103 @@ public class Slicer {
         }
     }
 
-    private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot, HashSet<Triangle2D> badTriangles = null, Vector2? testPoint = null) {
+    private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot, HashSet<Triangle2D> badTriangles = null, Point2D? testPoint = null) {
         SlicerDebug debug;
         debug.perimiter = new HashSet<Vector3>();
-        foreach (Edge e in edges) {
-            Vector3 point = e.a;
-            //point = (planeRot * point) - (p.distance * p.normal);
-            debug.perimiter.Add(point);
+        foreach (Point2D point in perimiter) {
+            Vector3 point3d = point;
+            point3d = (planeRot * point3d) - (p.distance * p.normal);
 
-            point = e.b;
-            //point = (planeRot * point) - (p.distance * p.normal);
-            debug.perimiter.Add(point);
+            debug.perimiter.Add(point3d);
         }
 
+        int i = 0;
+        debug.allTriangles = new List<Triangle3D>();
+        foreach (Triangle2D tri in triangles) {
+            Triangle3D tri3d = new Triangle3D();
+            tri3d.color = Triangle3D.GetColor(i++);
+
+            tri3d.a = tri.a;
+            tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
+
+            tri3d.b = tri.b;
+            tri3d.b = (planeRot * tri3d.b) - (p.distance * p.normal);
+
+            tri3d.c = tri.c;
+            tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
+
+            tri3d.circumcircleOrigin = (planeRot * (Vector3)tri.circumcircleOrigin) - (p.distance * p.normal);
+            tri3d.circumcircleRadius = Mathf.Sqrt(tri.circumcircleRadiusSq);
+            debug.allTriangles.Add(tri3d);
+        }
+
+        debug.badTriangles = new List<Triangle3D>();
         if (badTriangles != null) {
-            debug.badTriangles = new List<Vector3>();
             foreach (Triangle2D tri in badTriangles) {
+                Triangle3D tri3d = new Triangle3D();
+                tri3d.color = Triangle3D.GetColor(i++);
+
                 Vector3 point = tri.a;
                 point = (planeRot * point) - (p.distance * p.normal);
-                debug.badTriangles.Add(point);
+                tri3d.a = point;
 
                 point = tri.b;
                 point = (planeRot * point) - (p.distance * p.normal);
-                debug.badTriangles.Add(point);
+                tri3d.b = point;
 
                 point = tri.c;
                 point = (planeRot * point) - (p.distance * p.normal);
-                debug.badTriangles.Add(point);
+                tri3d.c = point;
+
+                tri3d.circumcircleOrigin = (planeRot * (Vector3)tri.circumcircleOrigin) - (p.distance * p.normal);
+                tri3d.circumcircleRadius = Mathf.Sqrt(tri.circumcircleRadiusSq);
+
+                debug.badTriangles.Add(tri3d);
             }
-        } else {
-            debug.badTriangles = null;
         }
 
         if (testPoint != null) {
-            debug.testPoint = (Vector2)testPoint;
+            debug.testPoint = (Vector3)testPoint;
             debug.testPoint = (planeRot * debug.testPoint) - (p.distance * p.normal);
         } else {
             debug.testPoint = Vector3.positiveInfinity;
         }
 
-        debug.vertices = new List<Vector3>();
-        debug.posTriangles = new List<int>();
-        debug.negTriangles = new List<int>();
-        debug.colours = new List<Color>();
-
-        /*
-        debug.vertices = new List<Vector3>(vertices);
-        debug.posTriangles = new List<int>(posTriangles);
-        debug.negTriangles = new List<int>(negTriangles);
-        debug.colours = new List<Color>(colours);
-        */
-
-        // Reorient and add to both the positivie and negative triangle lists
-        foreach (Triangle2D tri in triangles) {
-            Triangle tri3d = new Triangle();
-            tri3d.a = tri.a;
-            tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
-            tri3d.ai = debug.vertices.Count;
-
-            tri3d.b = tri.b;
-            tri3d.b = (planeRot * tri3d.b) - (p.distance * p.normal);
-            tri3d.bi = debug.vertices.Count + 1;
-
-            tri3d.c = tri.c;
-            tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
-            tri3d.ci = debug.vertices.Count + 2;
-
-            //Debug.Log("--- " + tri + " => " + tri3d);
-
-            debug.vertices.Add(tri3d.a); debug.colours.Add(Color.red);
-            debug.vertices.Add(tri3d.b); debug.colours.Add(Color.green);
-            debug.vertices.Add(tri3d.c); debug.colours.Add(Color.yellow);
-
-            debug.posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
-            debug.negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
-        }
-
         return debug;
     }
 
-    private void rotateAndAdd(Vector3 v, Quaternion rot, Plane p, HashSet<Vector2> perimiter, ref Vector2 min, ref Vector2 max) {
-        Vector3 rotated = rot * (v - (p.distance * p.normal));
+    private Point2D rotateAndAdd(Vector3 v, Quaternion rot, Plane p, HashSet<Point2D> perimiter, ref Point2D min, ref Point2D max) {
+        Point2D rotated = new Point2D((rot * (v - (p.distance * p.normal))));
         perimiter.Add(rotated);            
         
         min.x = Mathf.Min(min.x, rotated.x);
         min.y = Mathf.Min(min.y, rotated.y);
         max.x = Mathf.Max(max.x, rotated.x);
         max.y = Mathf.Max(max.y, rotated.y);
+
+        return rotated;
     }
 
     /**
      * Find a triangle that encompases the given min and max bounding points
      */
-    private Triangle2D findSuperTriangle(Vector2 min, Vector2 max) {
+    private Triangle2D findSuperTriangle(Point2D min, Point2D max) {
         float dx = max.x - min.x;
         float dy = max.y - min.y;
 
-        Vector2 ta = new Vector2(min.x - dx, min.y);
-        Vector2 tb = new Vector2(max.x + dx, min.y);
-        Vector2 tc = new Vector2(min.x + dx / 2, max.y + dy);
+        Point2D ta = new Point2D(min.x - dx, min.y);
+        Point2D tb = new Point2D(max.x + dx, min.y);
+        Point2D tc = new Point2D(min.x + dx / 2, max.y + dy);
 
         return new Triangle2D(ta, tb, tc);
-    }
-
-    private struct Triangle2D {
-        public Vector2 a { get; }
-        public Vector2 b { get; }
-        public Vector2 c { get; }
-
-        public Vector2 circumcircleOrigin { get; private set; }
-        public float circumcircleRadiusSq { get; private set; }
-
-        private int hashCode;
-
-        public Triangle2D(Vector2 a, Vector2 b, Vector2 c) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-
-            this.circumcircleOrigin = Vector2.zero;
-            this.circumcircleRadiusSq = 0;
-
-            int prime = 31;
-            hashCode = Math.Round(this.a.x, 2).GetHashCode();
-            hashCode = hashCode * prime + Math.Round(this.a.y, 2).GetHashCode();
-            hashCode = hashCode * prime + Math.Round(this.b.x, 2).GetHashCode();
-            hashCode = hashCode * prime + Math.Round(this.b.y, 2).GetHashCode();
-            hashCode = hashCode * prime + Math.Round(this.c.x, 2).GetHashCode();
-            hashCode = hashCode * prime + Math.Round(this.c.y, 2).GetHashCode();
-        }
-
-        public bool CircumcircleContains(Vector2 p) {
-            if (circumcircleRadiusSq == 0) {
-                calculateCircumcircle();
-            }
-
-            float dx = p.x - circumcircleOrigin.x;
-            float dy = p.y - circumcircleOrigin.y;
-            float rsq = dx*dx + dy*dy;
-
-            return rsq < circumcircleRadiusSq;
-            //return Mathf.Sqrt(rsq) < Mathf.Sqrt(circumcircleRadiusSq);
-        }
-
-        // Based on https://stackoverflow.com/a/9755252/2467874
-        public bool HasPoint(Vector2 p) {
-            if (a.Equals(p) || b.Equals(p) || c.Equals(p)) {
-                return true;
-            }
-            /* 
-            float aSideX = p.x - a.x;
-            float aSideY = p.y - a.y;
-
-            bool sideAB = (b.x - a.x) * aSideY - (b.y-a.y) * aSideX > 0;
-            bool sideAC = (c.x - a.x) * aSideY - (c.y-a.y) * aSideX > 0;
-
-            if (sideAB == sideAC) {
-                return false;
-            }
-
-            float bSideX = p.y - b.x;
-            float bSideY = p.y - b.y;
-            bool sideCB = (c.x - b.x) * bSideY - (c.y-b.y) * bSideX > 0;
-
-            if (sideCB == sideAB) {
-                return false;
-            }
-            return true;
-            */
-
-            return false;
-        }
-
-        // Based on https://gist.github.com/mutoo/5617691#gistcomment-1329247
-        private void calculateCircumcircle() {
-            float ayby = Mathf.Abs(a.y - b.y);
-            float bycy = Mathf.Abs(b.y - c.y);
-
-            if (ayby < Mathf.Epsilon && bycy < Mathf.Epsilon) {
-                // We have no size!
-                return;
-            }
-
-            float xc = 0, yc = 0;
-
-            if (ayby < Mathf.Epsilon) {
-                float m = -((c.x - b.x) / (c.y - b.y));
-                float mx = (b.x + c.x) / 2.0f;
-                float my = (b.y + c.y) / 2.0f;
-
-                xc = (b.x + a.y) / 2.0f;
-                yc = m * (xc - mx) + my;
-            } else if (bycy < Mathf.Epsilon) {
-                float m = -((b.x - a.x) / (b.y - a.y));
-                float mx = (a.x + b.x) / 2.0f;
-                float my = (a.y + b.y) / 2.0f;
-
-                xc = (c.x + b.x) / 2.0f;
-                yc = m * (xc - mx) + my;
-            } else {
-                float m1 = -((b.x - a.x) / (b.y - a.y));
-                float m1x = (a.x + b.x) / 2.0f;
-                float m1y = (a.y + b.y) / 2.0f;
-
-                float m2 = -((c.x - b.x) / (c.y - b.y));
-                float m2x = (b.x + c.x) / 2.0f;
-                float m2y = (b.y + c.y) / 2.0f;
-
-                xc = (m1 * m1x - m2 * m2x + m2y - m1y) / (m1 - m2);
-                yc = (ayby > bycy) ? m1 * (xc - m1x) + m1y : m2 * (xc - m2x) + m2y;
-            }
-
-            circumcircleOrigin = new Vector2(xc, yc);
-
-            float dx = b.x - xc;
-            float dy = b.y - yc;
-            circumcircleRadiusSq = dx*dx + dy*dy;
-        }
-
-        public override string ToString() {
-            return $"[{a},{b},{c}]";
-        }
-
-        public override bool Equals(object obj) {
-            if (!(obj is Triangle2D)) {
-                return false;
-            }
-
-            Triangle2D other = (Triangle2D)obj;
-            return a.Equals(other.a) && b.Equals(other.b) && c.Equals(other.c);
-        }
-
-        public override int GetHashCode() {
-            return hashCode;
-        }
-    }
-
-    private struct Edge2D {
-        public Vector2 a { get; }
-        public Vector2 b { get; }
-        public int hashCode;
-
-        public Edge2D(Vector2 a, Vector2 b) {
-            this.a = a;
-            this.b = b;
-
-            int prime = 31;
-            int hashCodeA = Math.Round(this.a.x, 2).GetHashCode();
-            hashCodeA = hashCodeA * prime + Math.Round(this.a.y, 2).GetHashCode();
-
-            int hashCodeB = Math.Round(this.b.x, 2).GetHashCode();
-            hashCodeB = hashCodeB * prime + Math.Round(this.b.y, 2).GetHashCode();
-
-            hashCode = hashCodeA ^ hashCodeB;
-        }
-
-        public override string ToString() {
-            return $"[{a},{b}]";
-        }
-
-        public override bool Equals(object obj) {
-            if (!(obj is Edge2D)) {
-                return false;
-            }
-
-            Edge2D other = (Edge2D)obj;
-            float d = (a.x - b.x) + (a.y - b.y);
-            return d < Mathf.Epsilon;
-        }
-
-        public override int GetHashCode() {
-            return hashCode;
-        }
-    }
-
-    private struct Triangle {
-        public int ai;
-        public Vector3 a;
-        public bool aSide;
-
-        public int bi;
-        public Vector3 b;
-        public bool bSide;
-
-        public int ci;
-        public Vector3 c;
-        public bool cSide;
-
-        public Vector3 normal;
-
-        public void initialise(Vector3[] vertices, int ai, int bi, int ci, Plane p) {
-            this.ai = ai;
-            a = vertices[ai];
-            aSide = p.GetSide(a);
-
-            this.bi = bi;
-            b = vertices[bi];
-            bSide = p.GetSide(b);
-
-            this.ci = ci;
-            c = vertices[ci];
-            cSide = p.GetSide(c);
-
-            normal = Vector3.Cross(b - a, b - c).normalized;
-        }
-
-        public override string ToString() {
-            return $"[{a},{b},{c}]";
-        }
-    }
-
-    private struct Edge {
-        public Vector3 a;
-        public Vector3 b;
-
-        public Vector3 direction;
-        public Vector3 normal;
-
-        public Edge(Vector3 a, Vector3 b, Vector3 normal) {
-            this.a = a;
-            this.b = b;
-            this.normal = normal;
-
-            direction = (b - a).normalized;
-        }
-
-        public int getSide(Vector3 p) {
-            float d = Vector3.Dot(Vector3.Cross(p - a, direction), normal);
-            return d < 0 ? -1 : d > 0 ? 1 : 0;
-        }
     }
 
     public struct SlicerDebug {
         public HashSet<Vector3> perimiter;
 
-        public List<Color> colours;
-        public List<Vector3> vertices;
+        public List<Triangle3D> allTriangles;
 
-        public List<int> posTriangles;
-        public List<int> negTriangles;
-
-        public List<Vector3> badTriangles;
+        public List<Triangle3D> badTriangles;
         public Vector3 testPoint;
-    }
-
-    private class EdgeEquivalenceComparator : IEqualityComparer<Edge2D> {
-        public bool Equals(Edge2D a, Edge2D b) {
-            float d = (a.a.x - b.a.x) + (a.a.y - b.a.y) + 
-                (a.b.x - b.b.x) + (a.b.y - b.b.y);
-            if (d < Mathf.Epsilon) {
-                return true;
-            }
-
-            d = (a.a.x - b.b.x) + (a.a.y - b.b.y) + 
-                (a.b.x - b.a.x) + (a.b.y - b.a.y);
-            if (d < Mathf.Epsilon) {
-                return true;
-            }
-
-            return false;
-        }
-
-        public int GetHashCode(Edge2D obj) {
-            return obj.GetHashCode();   
-        }
     }
 }
