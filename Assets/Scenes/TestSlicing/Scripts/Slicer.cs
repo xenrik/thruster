@@ -25,7 +25,7 @@ public class Slicer {
     private List<int> posTriangles = new List<int>();
     private List<int> negTriangles = new List<int>();
     private List<Edge3D> edges = new List<Edge3D>();
-    private HashSet<Point2D> perimiter = new HashSet<Point2D>();
+    private HashSet<Edge2D> perimiter = new HashSet<Edge2D>();
 
     private bool debugging = false;
 
@@ -91,6 +91,9 @@ public class Slicer {
         foreach (SlicerDebug debug in fillHolesBowyerWatson(p)) {
             yield return debug;
         }
+
+        // Remove the filled holes that were inside
+
 
         // TODO - Optimise
         // if (optimise) {
@@ -224,8 +227,7 @@ public class Slicer {
         Point2D min = new Point2D(float.MaxValue, float.MaxValue);
         Point2D max = new Point2D(float.MinValue, float.MinValue);
         foreach (Edge3D e in edges) {
-            Point2D a = rotateAndAdd(e.a, rot, p, perimiter, ref min, ref max);
-            Point2D b = rotateAndAdd(e.b, rot, p, perimiter, ref min, ref max);
+            addEdge(e, rot, p, ref min, ref max);
         }
          
         Log($"Perimiter has {perimiter.Count} points");
@@ -318,6 +320,7 @@ public class Slicer {
         // Cleanup
         badTriangles.Clear();
         foreach (Triangle2D tri in triangles) {
+            // If the triangle has a corner of the super triangle, remove it
             if (tri.HasPoint(superTriangle.a) || tri.HasPoint(superTriangle.b) || 
                     tri.HasPoint(superTriangle.c)) {
                 badTriangles.Add(tri);
@@ -342,6 +345,9 @@ public class Slicer {
             tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
             tri3d.ci = vertices.Count + 2;
 
+            // Find the edge for a-b
+            Edge3D edge = findEdge(tri.a, tri.b);
+
             //Log("--- " + tri + " => " + tri3d);
 
             vertices.Add(tri3d.a); colours.Add(Color.red);
@@ -350,6 +356,14 @@ public class Slicer {
 
             posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
             negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
+        }
+    }
+
+    private Edge3D findEdge(Point2D a, Point2D b) {
+        foreach (Point2D p in perimiter) {
+            if (p.Equals(a)) {
+                for (Edge)
+            }
         }
     }
 
@@ -418,16 +432,20 @@ public class Slicer {
         return debug;
     }
 
-    private Point2D rotateAndAdd(Vector3 v, Quaternion rot, Plane p, HashSet<Point2D> perimiter, ref Point2D min, ref Point2D max) {
-        Point2D rotated = new Point2D((rot * (v - (p.distance * p.normal))));
-        perimiter.Add(rotated);            
+    private Edge2D addEdge(Edge3D edge, Quaternion rot, Plane p, ref Point2D min, ref Point2D max) {
+        Point2D a = new Point2D((rot * (edge.a) - (p.distance * p.normal)));
+        Point2D b = new Point2D((rot * (edge.b) - (p.distance * p.normal)));
+        Point2D n = new Point2D(rot * (edge.normal));
         
-        min.x = Mathf.Min(min.x, rotated.x);
-        min.y = Mathf.Min(min.y, rotated.y);
-        max.x = Mathf.Max(max.x, rotated.x);
-        max.y = Mathf.Max(max.y, rotated.y);
+        Edge2D edge2d = new Edge2D(a, b, n);
+        perimiter.Add(edge2d);
 
-        return rotated;
+        min.x = Mathf.Min(min.x, edge2d.a.x, edge2d.b.x);
+        min.y = Mathf.Min(min.y, edge2d.a.y, edge2d.b.y);
+        max.x = Mathf.Max(max.x, edge2d.a.x, edge2d.b.x);
+        max.y = Mathf.Max(max.y, edge2d.a.y, edge2d.b.y);
+
+        return edge2d;
     }
 
     /**

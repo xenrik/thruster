@@ -6,12 +6,15 @@ using System.Collections.Generic;
 public struct Edge2D {
     public Point2D a { get; }
     public Point2D b { get; }
+    public Point2D normal { get; }
+
     public int hashCode;
 
-    public Edge2D(Point2D a, Point2D b) {
+    public Edge2D(Point2D a, Point2D b, Point2D normal) {
         this.a = a;
         this.b = b;
-
+        this.normal = normal;
+        
         hashCode = a.GetHashCode() ^ b.GetHashCode();
     }
 

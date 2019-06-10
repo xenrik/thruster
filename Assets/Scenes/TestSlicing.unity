@@ -321,6 +321,12 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 0.5, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &173370118 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -927199367670048503, guid: e6272f73ce8f9c34eae4410c6860d524,
+    type: 3}
+  m_PrefabInstance: {fileID: 1408729795}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &471467629
 GameObject:
   m_ObjectHideFlags: 0
@@ -713,7 +719,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16a2b48e42547814c96e3f35222fc2e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Slicee: {fileID: 1149109809}
+  Slicee: {fileID: 173370118}
   Material: {fileID: 2100000, guid: dc1de1a5a32e90e42aa43a2e438939d5, type: 2}
   ShowDebug: 0
   DebugSpeed: 0

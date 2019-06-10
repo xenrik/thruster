@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 public struct Point2D {
     private static Point2D _zero = new Point2D(0, 0);
@@ -10,16 +11,24 @@ public struct Point2D {
     public float x;
     public float y;
 
+    public List<Edge3D> edges;
+
     private int hashCode;
 
     public Point2D(Vector3 p) : this(p.x, p.y) {
     }
 
     public Point2D(float x, float y) {
-        this.x = (float)Math.Round(x, PRECISION);
-        this.y = (float)Math.Round(y, PRECISION);
+        if (PRECISION > 0) {
+            this.x = (float)Math.Round(x, PRECISION);
+            this.y = (float)Math.Round(y, PRECISION);
+        } else {
+            this.x = x;
+            this.y = y;
+        }
 
         this.hashCode = (int)(this.x + (31 * this.y));
+        this.edges = new List<Edge3D>();
     }
 
     public override int GetHashCode() {
