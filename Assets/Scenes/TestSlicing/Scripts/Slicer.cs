@@ -194,12 +194,6 @@ public class Slicer {
         }
     }
 
-    private void Log(String msg) {
-        if (debugging) {
-            Debug.Log(msg);
-        }
-    }
-
     private Vector3 getCut(Vector3 a, Vector3 b, Plane p) {
         ray.origin = a;
         ray.direction = b - a;
@@ -208,7 +202,7 @@ public class Slicer {
         bool result = p.Raycast(ray, out length);
         if (!result && length == 0) {
             // Something went wrong!
-            Log("Unexpectedly didn't intersect the plane?");
+            Debug.Log("Unexpectedly didn't intersect the plane?");
             return Vector3.zero;
         }
 
@@ -230,108 +224,13 @@ public class Slicer {
             addEdge(e, rot, p, ref min, ref max);
         }
          
-        Log($"Perimiter has {perimiter.Count} points");
+        Debug.Log($"Perimiter has {perimiter.Count} edges");
 
-        // Find and add the super-triangle
-        HashSet<Triangle2D> triangles = new HashSet<Triangle2D>();
-        Triangle2D superTriangle = findSuperTriangle(min - new Point2D(1, 1), max + new Point2D(1, 1));
-        Log("superTriangle: " + superTriangle);
-
-        triangles.Add(superTriangle);
-
-        // Calculate the triangle list
-        HashSet<Edge2D> polygon = new HashSet<Edge2D>(new Edge2D.EquivalentComparator());
-        HashSet<Edge2D> badEdges = new HashSet<Edge2D>(new Edge2D.EquivalentComparator());
-        HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
-        foreach (Point2D point in perimiter) {
-            Log("---");
-            Log("Triangles: " + triangles.Count);
-
-            badTriangles.Clear();
-            foreach (Triangle2D tri in triangles) {
-                if (tri.CircumcircleContains(point)) {
-                    Log("badTriangle: " + tri + " (for point: " + point + ")");
-                    badTriangles.Add(tri);
-                    //break;
-                    
-                }
-            }
-
-            yield return fillDebug(triangles, p, planeRot, badTriangles, point);
-
-            polygon.Clear();
-            badEdges.Clear();
-            foreach (Triangle2D tri in badTriangles) {
-                triangles.Remove(tri);
-                Log("Removed triangle: " + tri + " (" + triangles.Count + " left)");
-
-                Edge2D ab = new Edge2D(tri.a, tri.b);
-                if (!badEdges.Contains(ab)) {
-                    if (polygon.Contains(ab)) {
-                        polygon.Remove(ab);
-                        badEdges.Add(ab);
-                    } else {
-                        polygon.Add(ab);
-                    }
-                }
-
-                Edge2D bc = new Edge2D(tri.b, tri.c);
-                if (!badEdges.Contains(bc)) {
-                    if (polygon.Contains(bc)) {
-                        polygon.Remove(bc);
-                        badEdges.Add(bc);
-                    } else {
-                        polygon.Add(bc);
-                    }
-                }
-
-                Edge2D ca = new Edge2D(tri.c, tri.a);
-                if (!badEdges.Contains(ca)) {
-                    if (polygon.Contains(ca)) {
-                        polygon.Remove(ca);
-                        badEdges.Add(ca);
-                    } else {
-                        polygon.Add(ca);
-                    }
-                }
-            }
-
-            int i = 0;
-            Log("Unique Edges: ");
-            foreach (Edge2D edge in polygon) {
-                Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
-            }
-
-            i = 0;
-            Log("Duplicate Edges: ");
-            foreach (Edge2D edge in badEdges) {
-                Log("- " + (++i) + " = " + edge + " (" + edge.GetHashCode() + ")");
-            }
-
-            foreach (Edge2D edge in polygon) {
-                Triangle2D tri = new Triangle2D(edge.a, edge.b, point);
-                Log("newTriangle: " + tri);
-                triangles.Add(tri);
-            }
-
-            yield return fillDebug(triangles, p, planeRot);
-        }
-
-        // Cleanup
-        badTriangles.Clear();
-        foreach (Triangle2D tri in triangles) {
-            // If the triangle has a corner of the super triangle, remove it
-            if (tri.HasPoint(superTriangle.a) || tri.HasPoint(superTriangle.b) || 
-                    tri.HasPoint(superTriangle.c)) {
-                badTriangles.Add(tri);
-            }
-        }
-        foreach (Triangle2D tri in badTriangles) {
-            triangles.Remove(tri);
-        }
+        BowyerWatsonFill fill = new BowyerWatsonFill(perimiter);
+        fill.Fill();
 
         // Reorient and add to both the positivie and negative triangle lists
-        foreach (Triangle2D tri in triangles) {
+        foreach (Triangle2D tri in fill.Triangles) {
             Triangle3D tri3d = new Triangle3D();
             tri3d.a = tri.a;
             tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
@@ -345,9 +244,6 @@ public class Slicer {
             tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
             tri3d.ci = vertices.Count + 2;
 
-            // Find the edge for a-b
-            Edge3D edge = findEdge(tri.a, tri.b);
-
             //Log("--- " + tri + " => " + tri3d);
 
             vertices.Add(tri3d.a); colours.Add(Color.red);
@@ -357,14 +253,8 @@ public class Slicer {
             posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
             negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
         }
-    }
 
-    private Edge3D findEdge(Point2D a, Point2D b) {
-        foreach (Point2D p in perimiter) {
-            if (p.Equals(a)) {
-                for (Edge)
-            }
-        }
+        yield break;
     }
 
     private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot, HashSet<Triangle2D> badTriangles = null, Point2D? testPoint = null) {
@@ -446,20 +336,6 @@ public class Slicer {
         max.y = Mathf.Max(max.y, edge2d.a.y, edge2d.b.y);
 
         return edge2d;
-    }
-
-    /**
-     * Find a triangle that encompases the given min and max bounding points
-     */
-    private Triangle2D findSuperTriangle(Point2D min, Point2D max) {
-        float dx = max.x - min.x;
-        float dy = max.y - min.y;
-
-        Point2D ta = new Point2D(min.x - dx, min.y);
-        Point2D tb = new Point2D(max.x + dx, min.y);
-        Point2D tc = new Point2D(min.x + dx / 2, max.y + dy);
-
-        return new Triangle2D(ta, tb, tc);
     }
 
     public struct SlicerDebug {

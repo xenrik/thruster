@@ -11,8 +11,6 @@ public struct Point2D {
     public float x;
     public float y;
 
-    public List<Edge3D> edges;
-
     private int hashCode;
 
     public Point2D(Vector3 p) : this(p.x, p.y) {
@@ -28,7 +26,6 @@ public struct Point2D {
         }
 
         this.hashCode = (int)(this.x + (31 * this.y));
-        this.edges = new List<Edge3D>();
     }
 
     public override int GetHashCode() {
