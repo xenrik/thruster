@@ -6,8 +6,6 @@ using UnityEngine;
 
 public class Slicer {
 
-    public enum FillType { GRID };
-
     public Mesh posMesh;
     public Mesh negMesh;
 
@@ -25,29 +23,14 @@ public class Slicer {
     private List<int> posTriangles = new List<int>();
     private List<int> negTriangles = new List<int>();
     private List<Edge3D> edges = new List<Edge3D>();
-    private HashSet<Edge2D> perimiter = new HashSet<Edge2D>();
+    private HashSet<Point2D> perimiter = new HashSet<Point2D>();
 
-    private bool debugging = false;
-
-    public Slicer(Mesh mesh, bool optimise = false, FillType fillType = FillType.GRID) {
+    public Slicer(Mesh mesh, bool optimise = false) {
         this.mesh = mesh;
         this.optimise = optimise;
     }
 
     public void slice(Plane p) {
-        foreach (SlicerDebug debug in doSliceDebug(p)) {
-            // Loop
-        }
-    }
-
-    public IEnumerable<SlicerDebug> sliceDebug(Plane p) {
-        debugging = true;
-        foreach (SlicerDebug debug in doSliceDebug(p)) {
-            yield return debug;
-        }
-    }
-
-    private IEnumerable<SlicerDebug> doSliceDebug(Plane p) {
         Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
         Vector3[] normals = mesh.normals;
@@ -88,20 +71,15 @@ public class Slicer {
         }
 
         // Fill the holes
-        foreach (SlicerDebug debug in fillHolesBowyerWatson(p)) {
-            yield return debug;
-        }
-
-        // Remove the filled holes that were inside
-
+        fillHolesBowyerWatson(p);
 
         // TODO - Optimise
         // if (optimise) {
         //    ...
         // }
 
-        //Log("Split " + count + " triangles");
-        //Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
+        Debug.Log("Split " + count + " triangles");
+        Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
 
         posMesh = new Mesh();
         posMesh.vertices = vertices.ToArray();
@@ -209,7 +187,7 @@ public class Slicer {
         return ray.GetPoint(length);
     }
 
-    private IEnumerable<SlicerDebug> fillHolesBowyerWatson(Plane p) {
+    private void fillHolesBowyerWatson(Plane p) {
         // Rotate the edges to be on a horizontal plane at the origin
         Quaternion up = Quaternion.Euler(Vector3.up);
         Quaternion planeRot = Quaternion.LookRotation(p.normal);
@@ -217,11 +195,12 @@ public class Slicer {
         Quaternion rot = up * inorm;
 
         perimiter.Clear();
-
-        Point2D min = new Point2D(float.MaxValue, float.MaxValue);
-        Point2D max = new Point2D(float.MinValue, float.MinValue);
         foreach (Edge3D e in edges) {
-            addEdge(e, rot, p, ref min, ref max);
+            Point2D point2d = new Point2D(rot * (e.a - (p.distance * p.normal)));
+            perimiter.Add(point2d);
+
+            point2d = new Point2D(rot * (e.b - (p.distance * p.normal)));
+            perimiter.Add(point2d);
         }
          
         Debug.Log($"Perimiter has {perimiter.Count} edges");
@@ -244,8 +223,6 @@ public class Slicer {
             tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
             tri3d.ci = vertices.Count + 2;
 
-            //Log("--- " + tri + " => " + tri3d);
-
             vertices.Add(tri3d.a); colours.Add(Color.red);
             vertices.Add(tri3d.b); colours.Add(Color.green);
             vertices.Add(tri3d.c); colours.Add(Color.yellow);
@@ -253,97 +230,5 @@ public class Slicer {
             posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
             negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
         }
-
-        yield break;
-    }
-
-    private SlicerDebug fillDebug(HashSet<Triangle2D> triangles, Plane p, Quaternion planeRot, HashSet<Triangle2D> badTriangles = null, Point2D? testPoint = null) {
-        SlicerDebug debug;
-        debug.perimiter = new HashSet<Vector3>();
-        foreach (Point2D point in perimiter) {
-            Vector3 point3d = point;
-            point3d = (planeRot * point3d) - (p.distance * p.normal);
-
-            debug.perimiter.Add(point3d);
-        }
-
-        int i = 0;
-        debug.allTriangles = new List<Triangle3D>();
-        foreach (Triangle2D tri in triangles) {
-            Triangle3D tri3d = new Triangle3D();
-            tri3d.color = Triangle3D.GetColor(i++);
-
-            tri3d.a = tri.a;
-            tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
-
-            tri3d.b = tri.b;
-            tri3d.b = (planeRot * tri3d.b) - (p.distance * p.normal);
-
-            tri3d.c = tri.c;
-            tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
-
-            tri3d.circumcircleOrigin = (planeRot * (Vector3)tri.circumcircleOrigin) - (p.distance * p.normal);
-            tri3d.circumcircleRadius = Mathf.Sqrt(tri.circumcircleRadiusSq);
-            debug.allTriangles.Add(tri3d);
-        }
-
-        debug.badTriangles = new List<Triangle3D>();
-        if (badTriangles != null) {
-            foreach (Triangle2D tri in badTriangles) {
-                Triangle3D tri3d = new Triangle3D();
-                tri3d.color = Triangle3D.GetColor(i++);
-
-                Vector3 point = tri.a;
-                point = (planeRot * point) - (p.distance * p.normal);
-                tri3d.a = point;
-
-                point = tri.b;
-                point = (planeRot * point) - (p.distance * p.normal);
-                tri3d.b = point;
-
-                point = tri.c;
-                point = (planeRot * point) - (p.distance * p.normal);
-                tri3d.c = point;
-
-                tri3d.circumcircleOrigin = (planeRot * (Vector3)tri.circumcircleOrigin) - (p.distance * p.normal);
-                tri3d.circumcircleRadius = Mathf.Sqrt(tri.circumcircleRadiusSq);
-
-                debug.badTriangles.Add(tri3d);
-            }
-        }
-
-        if (testPoint != null) {
-            debug.testPoint = (Vector3)testPoint;
-            debug.testPoint = (planeRot * debug.testPoint) - (p.distance * p.normal);
-        } else {
-            debug.testPoint = Vector3.positiveInfinity;
-        }
-
-        return debug;
-    }
-
-    private Edge2D addEdge(Edge3D edge, Quaternion rot, Plane p, ref Point2D min, ref Point2D max) {
-        Point2D a = new Point2D((rot * (edge.a) - (p.distance * p.normal)));
-        Point2D b = new Point2D((rot * (edge.b) - (p.distance * p.normal)));
-        Point2D n = new Point2D(rot * (edge.normal));
-        
-        Edge2D edge2d = new Edge2D(a, b, n);
-        perimiter.Add(edge2d);
-
-        min.x = Mathf.Min(min.x, edge2d.a.x, edge2d.b.x);
-        min.y = Mathf.Min(min.y, edge2d.a.y, edge2d.b.y);
-        max.x = Mathf.Max(max.x, edge2d.a.x, edge2d.b.x);
-        max.y = Mathf.Max(max.y, edge2d.a.y, edge2d.b.y);
-
-        return edge2d;
-    }
-
-    public struct SlicerDebug {
-        public HashSet<Vector3> perimiter;
-
-        public List<Triangle3D> allTriangles;
-
-        public List<Triangle3D> badTriangles;
-        public Vector3 testPoint;
     }
 }

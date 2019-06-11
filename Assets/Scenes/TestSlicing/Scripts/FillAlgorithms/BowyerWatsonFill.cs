@@ -8,7 +8,7 @@ public class BowyerWatsonFill {
         }
     }
 
-    private ICollection<Edge2D> perimiter;
+    private ICollection<Point2D> perimiter;
 
     private HashSet<Triangle2D> triangles = new HashSet<Triangle2D>();
     private Point2D min;
@@ -17,14 +17,14 @@ public class BowyerWatsonFill {
     private Dictionary<Edge2D,int> polygon = new Dictionary<Edge2D, int>(new Edge2D.EquivalentComparator());
     private HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
 
-    public BowyerWatsonFill(ICollection<Edge2D> perimiter) {
+    public BowyerWatsonFill(ICollection<Point2D> perimiter) {
         this.perimiter = perimiter;
 
-        foreach (Edge2D edge in perimiter) {
-            min.x = Mathf.Min(min.x, edge.a.x, edge.b.x);
-            min.y = Mathf.Min(min.y, edge.a.y, edge.b.y);
-            max.x = Mathf.Max(min.x, edge.a.x, edge.b.x);
-            max.y = Mathf.Max(min.y, edge.a.y, edge.b.y);
+        foreach (Point2D point in perimiter) {
+            min.x = Mathf.Min(min.x, point.x);
+            min.y = Mathf.Min(min.y, point.y);
+            max.x = Mathf.Max(max.x, point.x);
+            max.y = Mathf.Max(max.y, point.y);
         }
     }
 
@@ -32,9 +32,8 @@ public class BowyerWatsonFill {
         Triangle2D superTriangle = findSuperTriangle(min - new Point2D(1, 1), max + new Point2D(1, 1));
         triangles.Add(superTriangle);
 
-        foreach (Edge2D edge in perimiter) {
-            processPoint(edge.a, edge.normal);
-            processPoint(edge.b, edge.normal);
+        foreach (Point2D point in perimiter) {
+            processPoint(point);
         }
 
         // Cleanup
@@ -45,7 +44,12 @@ public class BowyerWatsonFill {
                     tri.HasPoint(superTriangle.c)) {
                 badTriangles.Add(tri);
             }
+
+            // For an arbitrary line from the centre of the triangle, 
+            // see how many times we cross the perimiter. 
+            // If this is even or zero, we are outside the perimiter.            
         }
+
         foreach (Triangle2D tri in badTriangles) {
             triangles.Remove(tri);
         }
@@ -65,7 +69,7 @@ public class BowyerWatsonFill {
         return new Triangle2D(ta, tb, tc);
     }
 
-    private void processPoint(Point2D point, Point2D normal) {
+    private void processPoint(Point2D point) {
         badTriangles.Clear();
         foreach (Triangle2D tri in triangles) {
             if (tri.CircumcircleContains(point)) {
