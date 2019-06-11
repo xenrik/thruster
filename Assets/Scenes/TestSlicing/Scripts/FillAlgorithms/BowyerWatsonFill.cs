@@ -8,7 +8,7 @@ public class BowyerWatsonFill {
         }
     }
 
-    private ICollection<Point2D> perimiter;
+    private ICollection<Edge2D> perimiter;
 
     private HashSet<Triangle2D> triangles = new HashSet<Triangle2D>();
     private Point2D min;
@@ -17,14 +17,14 @@ public class BowyerWatsonFill {
     private Dictionary<Edge2D,int> polygon = new Dictionary<Edge2D, int>(new Edge2D.EquivalentComparator());
     private HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
 
-    public BowyerWatsonFill(ICollection<Point2D> perimiter) {
+    public BowyerWatsonFill(ICollection<Edge2D> perimiter) {
         this.perimiter = perimiter;
 
-        foreach (Point2D point in perimiter) {
-            min.x = Mathf.Min(min.x, point.x);
-            min.y = Mathf.Min(min.y, point.y);
-            max.x = Mathf.Max(max.x, point.x);
-            max.y = Mathf.Max(max.y, point.y);
+        foreach (Edge2D edge in perimiter) {
+            min.x = Mathf.Min(min.x, edge.a.x, edge.b.x);
+            min.y = Mathf.Min(min.y, edge.a.y, edge.b.y);
+            max.x = Mathf.Max(max.x, edge.a.x, edge.b.x);
+            max.y = Mathf.Max(max.y, edge.a.y, edge.b.y);
         }
     }
 
@@ -32,8 +32,9 @@ public class BowyerWatsonFill {
         Triangle2D superTriangle = findSuperTriangle(min - new Point2D(1, 1), max + new Point2D(1, 1));
         triangles.Add(superTriangle);
 
-        foreach (Point2D point in perimiter) {
-            processPoint(point);
+        foreach (Edge2D point in perimiter) {
+            processPoint(point.a);
+            processPoint(point.b);
         }
 
         // Cleanup
@@ -43,11 +44,25 @@ public class BowyerWatsonFill {
             if (tri.HasPoint(superTriangle.a) || tri.HasPoint(superTriangle.b) || 
                     tri.HasPoint(superTriangle.c)) {
                 badTriangles.Add(tri);
+                continue;
             }
 
             // For an arbitrary line from the centre of the triangle, 
             // see how many times we cross the perimiter. 
-            // If this is even or zero, we are outside the perimiter.            
+            // If this is even, we are outside the perimiter.      
+            int count = 0;
+            Point2D a = tri.CentroidPoint();
+            Point2D b = new Point2D(float.MinValue, float.MinValue);
+
+            foreach (Edge2D edge in perimiter) {
+                if (edge.Intersects(a, b)) {
+                    count++;
+                }
+            }
+
+            if (count % 2 == 0) {
+                badTriangles.Add(tri);
+            }
         }
 
         foreach (Triangle2D tri in badTriangles) {

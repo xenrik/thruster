@@ -23,7 +23,7 @@ public class Slicer {
     private List<int> posTriangles = new List<int>();
     private List<int> negTriangles = new List<int>();
     private List<Edge3D> edges = new List<Edge3D>();
-    private HashSet<Point2D> perimiter = new HashSet<Point2D>();
+    private HashSet<Edge2D> perimiter = new HashSet<Edge2D>();
 
     public Slicer(Mesh mesh, bool optimise = false) {
         this.mesh = mesh;
@@ -196,11 +196,10 @@ public class Slicer {
 
         perimiter.Clear();
         foreach (Edge3D e in edges) {
-            Point2D point2d = new Point2D(rot * (e.a - (p.distance * p.normal)));
-            perimiter.Add(point2d);
-
-            point2d = new Point2D(rot * (e.b - (p.distance * p.normal)));
-            perimiter.Add(point2d);
+            Point2D a = new Point2D(rot * (e.a - (p.distance * p.normal)));
+            Point2D b = new Point2D(rot * (e.b - (p.distance * p.normal)));
+            
+            perimiter.Add(new Edge2D(a,b));
         }
          
         Debug.Log($"Perimiter has {perimiter.Count} edges");

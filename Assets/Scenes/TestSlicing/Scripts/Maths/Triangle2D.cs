@@ -57,33 +57,12 @@ public struct Triangle2D {
         //return Mathf.Sqrt(rsq) < Mathf.Sqrt(circumcircleRadiusSq);
     }
 
-    // Based on https://stackoverflow.com/a/9755252/2467874
+    public Point2D CentroidPoint() {
+        return new Point2D((a.x + b.x + c.x) / 3.0f, (a.y + b.y + c.y) / 3.0f);
+    }
+
     public bool HasPoint(Point2D p) {
-        if (a.Equals(p) || b.Equals(p) || c.Equals(p)) {
-            return true;
-        }
-        /* 
-        float aSideX = p.x - a.x;
-        float aSideY = p.y - a.y;
-
-        bool sideAB = (b.x - a.x) * aSideY - (b.y-a.y) * aSideX > 0;
-        bool sideAC = (c.x - a.x) * aSideY - (c.y-a.y) * aSideX > 0;
-
-        if (sideAB == sideAC) {
-            return false;
-        }
-
-        float bSideX = p.y - b.x;
-        float bSideY = p.y - b.y;
-        bool sideCB = (c.x - b.x) * bSideY - (c.y-b.y) * bSideX > 0;
-
-        if (sideCB == sideAB) {
-            return false;
-        }
-        return true;
-        */
-
-        return false;
+        return a.Equals(p) || b.Equals(p) || c.Equals(p);
     }
 
     // Based on https://gist.github.com/mutoo/5617691#gistcomment-1329247
