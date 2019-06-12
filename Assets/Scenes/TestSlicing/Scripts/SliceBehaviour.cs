@@ -6,6 +6,7 @@ using UnityEditor;
 public class SliceBehaviour : MonoBehaviour {
 	public GameObject Slicee;
 	public Material Material;
+	public bool Debug;
 
 	public float Tolerance = 0.01f;
 	public float RotationTolerance = 1;
@@ -18,6 +19,7 @@ public class SliceBehaviour : MonoBehaviour {
 	private Plane plane;
 
 	private HashSet<GameObject> slices = new HashSet<GameObject>();
+	private Slicer.Debug slicerDebug = null;
 
     private void Start() {
     	MeshFilter f = Slicee.GetComponent<MeshFilter>();
@@ -29,7 +31,7 @@ public class SliceBehaviour : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		Debug.DrawRay(transform.position, transform.up * 5, Color.red);
+		UnityEngine.Debug.DrawRay(transform.position, transform.up * 5, Color.red);
 		Vector3 offset = transform.position - oldPosition;
 		float rotationOffset = Quaternion.Angle(transform.rotation, oldRotation);
 		if (offset.magnitude > Tolerance || rotationOffset > RotationTolerance) {
@@ -47,14 +49,14 @@ public class SliceBehaviour : MonoBehaviour {
 			}
 
 			if (PlaneIntersects(plane, b)) {
-				Debug.Log("Slice!");
+				UnityEngine.Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
 				
 				slice(plane);
 
 				Slicee.SetActive(false);
 			} else {
-				Debug.Log("OOB");
+				UnityEngine.Debug.Log("OOB");
 				Slicee.SetActive(true);
 			}
 
@@ -117,11 +119,67 @@ public class SliceBehaviour : MonoBehaviour {
 		Mesh negMesh = new Mesh();
 		negFilter.mesh = negMesh;
 
-		slicer.slice(plane);
+		if (Debug) {
+			StopAllCoroutines();
+			StartCoroutine(sliceDebug(plane, posFilter, negFilter));
+		} else {
+			slicer.slice(plane);
 
+			posFilter.mesh = slicer.posMesh;
+			negFilter.mesh = slicer.negMesh;
+
+			UnityEngine.Debug.Log("Finished!");
+		}
+	}
+
+	private IEnumerator sliceDebug(Plane p, MeshFilter posFilter, MeshFilter negFilter) {
+		foreach (Slicer.Debug debug in slicer.sliceDebug(plane)) {
+			slicerDebug = debug;
+
+			UnityEngine.Debug.Break();
+			yield return true;
+		}
+
+		slicerDebug = null;
 		posFilter.mesh = slicer.posMesh;
 		negFilter.mesh = slicer.negMesh;
 
-		Debug.Log("Finished!");
+		UnityEngine.Debug.Log("Finished!");
+	}
+
+	private void OnDrawGizmos() {
+		if (slicerDebug == null) {
+			return;
+		}
+
+		Vector3 offset = Slicee.transform.position;
+		foreach (Triangle3D tri in slicerDebug.AllTriangles) {
+			Gizmos.color = Color.white;
+			MoreGizmos.DrawLine(tri.a + offset, tri.b + offset, 3);
+			MoreGizmos.DrawLine(tri.b + offset, tri.c + offset, 3);
+			MoreGizmos.DrawLine(tri.c + offset, tri.a + offset, 3);
+		}
+
+		foreach (Triangle3D tri in slicerDebug.BadTriangles) {
+			Gizmos.color = Color.red;
+			MoreGizmos.DrawLine(tri.a + offset, tri.b + offset, 3);
+			MoreGizmos.DrawLine(tri.b + offset, tri.c + offset, 3);
+			MoreGizmos.DrawLine(tri.c + offset, tri.a + offset, 3);
+		}
+
+		foreach (Triangle3D tri in slicerDebug.NewTriangles) {
+			Gizmos.color = Color.green;
+			MoreGizmos.DrawLine(tri.a + offset, tri.b + offset, 3);
+			MoreGizmos.DrawLine(tri.b + offset, tri.c + offset, 3);
+			MoreGizmos.DrawLine(tri.c + offset, tri.a + offset, 3);
+		}
+
+		foreach (Vector3 point in slicerDebug.Perimiter) {
+			Gizmos.color = Color.yellow;
+			Gizmos.DrawSphere(point + offset, 0.05f);
+		}
+
+		Gizmos.color = Color.blue;
+		Gizmos.DrawSphere(slicerDebug.CurrentPoint + offset, 0.05f);
 	}
 }

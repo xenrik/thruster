@@ -31,6 +31,18 @@ public class Slicer {
     }
 
     public void slice(Plane p) {
+        foreach (Slicer.Debug debug in doSlice(p, null)) {
+            // Do nothing
+        }
+    }
+
+    public IEnumerable<Slicer.Debug> sliceDebug(Plane p) {
+        foreach (Slicer.Debug result in doSlice(p, new Slicer.Debug())) {
+            yield return result;
+        }
+    }
+
+    private IEnumerable<Slicer.Debug> doSlice(Plane p, Slicer.Debug debug) {
         Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
         Vector3[] normals = mesh.normals;
@@ -71,15 +83,17 @@ public class Slicer {
         }
 
         // Fill the holes
-        fillHolesBowyerWatson(p);
+        foreach (Slicer.Debug result in fillHolesBowyerWatson(p, debug)) {
+            yield return result;
+        }
 
         // TODO - Optimise
         // if (optimise) {
         //    ...
         // }
 
-        Debug.Log("Split " + count + " triangles");
-        Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
+        UnityEngine.Debug.Log("Split " + count + " triangles");
+        UnityEngine.Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
 
         posMesh = new Mesh();
         posMesh.vertices = vertices.ToArray();
@@ -180,14 +194,14 @@ public class Slicer {
         bool result = p.Raycast(ray, out length);
         if (!result && length == 0) {
             // Something went wrong!
-            Debug.Log("Unexpectedly didn't intersect the plane?");
+            UnityEngine.Debug.Log("Unexpectedly didn't intersect the plane?");
             return Vector3.zero;
         }
 
         return ray.GetPoint(length);
     }
 
-    private void fillHolesBowyerWatson(Plane p) {
+    private IEnumerable<Slicer.Debug> fillHolesBowyerWatson(Plane p, Slicer.Debug debug) {
         // Rotate the edges to be on a horizontal plane at the origin
         Quaternion up = Quaternion.Euler(Vector3.up);
         Quaternion planeRot = Quaternion.LookRotation(p.normal);
@@ -202,10 +216,17 @@ public class Slicer {
             perimiter.Add(new Edge2D(a,b));
         }
          
-        Debug.Log($"Perimiter has {perimiter.Count} edges");
+        UnityEngine.Debug.Log($"Perimiter has {perimiter.Count} edges");
 
         BowyerWatsonFill fill = new BowyerWatsonFill(perimiter);
-        fill.Fill();
+        if (debug != null) {
+            debug.SetPlane(planeRot, p);
+            foreach (Slicer.Debug result in fill.Fill(debug)) {
+                yield return result;
+            }
+        } else {
+            fill.Fill();
+        }
 
         // Reorient and add to both the positivie and negative triangle lists
         foreach (Triangle2D tri in fill.Triangles) {
@@ -228,6 +249,71 @@ public class Slicer {
 
             posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
             negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
+        }
+    }
+
+    public class Debug {
+        public List<Vector3> Perimiter { get; private set; }
+        public Vector3 CurrentPoint { get; private set; }
+
+        public List<Triangle3D> BadTriangles { get; private set; }
+        public List<Triangle3D> NewTriangles { get; private set; }
+        public List<Triangle3D> AllTriangles { get; private set; }
+
+        private Quaternion planeRot;
+        private Plane plane;
+
+        internal Debug() {
+            Reset();
+        }
+
+        internal void SetPlane(Quaternion planeRot, Plane plane) {
+            this.planeRot = planeRot;
+            this.plane = plane;
+        }
+
+        public void Reset() {
+            CurrentPoint = Vector3.zero;
+            Perimiter = new List<Vector3>();
+            BadTriangles = new List<Triangle3D>();
+            NewTriangles = new List<Triangle3D>();
+            AllTriangles = new List<Triangle3D>();
+        }
+
+        public void SetTestPoint(Point2D p) {
+            CurrentPoint = ConvertPoint(p);
+        }
+
+        public void AddPerimiterPoint(Point2D p) {
+            Perimiter.Add(ConvertPoint(p));
+        }
+
+        public void AddBadTriangle(Triangle2D tri) {
+            BadTriangles.Add(ConvertTriangle(tri));
+        }
+
+        public void AddNewTriangle(Triangle2D tri) {
+            NewTriangles.Add(ConvertTriangle(tri));
+        }
+
+        public void AddTriangle(Triangle2D tri) {
+            AllTriangles.Add(ConvertTriangle(tri));
+        }
+
+        private Vector3 ConvertPoint(Point2D p) {
+            return (planeRot * p) - (plane.distance * plane.normal);
+        }
+
+        private Triangle3D ConvertTriangle(Triangle2D tri) {
+            Triangle3D tri3d = new Triangle3D();
+            tri3d.a = ConvertPoint(tri.a);
+            tri3d.b = ConvertPoint(tri.b);
+            tri3d.c = ConvertPoint(tri.c);
+
+            tri3d.circumcircleOrigin = (planeRot * tri.circumcircleOrigin) - (plane.distance * plane.normal);
+            tri3d.circumcircleRadius = Mathf.Sqrt(tri.circumcircleRadiusSq);
+
+            return tri3d;
         }
     }
 }
