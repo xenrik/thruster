@@ -18,8 +18,11 @@ public class BowyerWatsonFill {
     private Dictionary<Edge2D,int> polygon = new Dictionary<Edge2D, int>(new Edge2D.EquivalentComparator());
     private HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
 
-    public BowyerWatsonFill(ICollection<Edge2D> perimiter) {
+    private bool checkForHoles;
+
+    public BowyerWatsonFill(ICollection<Edge2D> perimiter, bool checkForHoles) {
         this.perimiter = perimiter;
+        this.checkForHoles = checkForHoles;
 
         foreach (Edge2D edge in perimiter) {
             min.x = Mathf.Min(min.x, edge.a.x, edge.b.x);
@@ -40,12 +43,12 @@ public class BowyerWatsonFill {
         triangles.Add(superTriangle);
 
         foreach (Edge2D point in perimiter) {
-            processPoint(point.a);
+            processPoint(point.a, debug != null);
             if (debug != null) {
                 yield return PopulateDebug(debug, point.a);
             }
 
-            processPoint(point.b);
+            processPoint(point.b, debug != null);
             if (debug != null) {
                 yield return PopulateDebug(debug, point.b);
             }
@@ -64,21 +67,21 @@ public class BowyerWatsonFill {
             // For an arbitrary line from the centre of the triangle, 
             // see how many times we cross the perimiter. 
             // If this is even, we are outside the perimiter.      
-            /*
-            int count = 0;
-            Point2D a = tri.CentroidPoint();
-            Point2D b = new Point2D(float.MinValue, float.MinValue);
+            if (checkForHoles) {
+                int count = 0;
+                Point2D a = tri.CentroidPoint();
+                Point2D b = new Point2D(float.MinValue, float.MinValue);
 
-            foreach (Edge2D edge in perimiter) {
-                if (edge.Intersects(a, b)) {
-                    count++;
+                foreach (Edge2D edge in perimiter) {
+                    if (edge.Intersects(a, b)) {
+                        count++;
+                    }
+                }
+
+                if (count % 2 == 0) {
+                    badTriangles.Add(tri);
                 }
             }
-
-            if (count % 2 == 0) {
-                badTriangles.Add(tri);
-            }
-            */
         }
 
         foreach (Triangle2D tri in badTriangles) {
@@ -100,18 +103,32 @@ public class BowyerWatsonFill {
         return new Triangle2D(ta, tb, tc);
     }
 
-    private void processPoint(Point2D point) {
+    private void processPoint(Point2D point, bool debug) {
+        if (debug) {
+            Debug.Log("----------------");
+            Debug.Log($"Processing Point: {point}");
+        }
+
         badTriangles.Clear();
         foreach (Triangle2D tri in triangles) {
+            if (tri.HasPoint(point)) {
+                // Don't need to process this triangle further
+                badTriangles.Clear();
+                break;
+            }
             if (tri.CircumcircleContains(point)) {
                 badTriangles.Add(tri);
+
+                if (debug) {
+                    Debug.Log($"   Bad Triangle: {tri}");
+                }
             }
         }
 
         polygon.Clear();
         foreach (Triangle2D tri in badTriangles) {
             if (!triangles.Remove(tri)) {
-                UnityEngine.Debug.Log("Didn't remove triangle!: " + tri);
+                Debug.Log("Didn't remove triangle!: " + tri);
             }
 
             Edge2D ab = new Edge2D(tri.a, tri.b);
@@ -141,6 +158,10 @@ public class BowyerWatsonFill {
             if (edge.Value == 1) {
                 Triangle2D tri = new Triangle2D(edge.Key.a, edge.Key.b, point);
                 newTriangles.Add(tri);
+
+                if (debug) {
+                    Debug.Log($"   New Triangle: {tri}");
+                }
             }
         }
 

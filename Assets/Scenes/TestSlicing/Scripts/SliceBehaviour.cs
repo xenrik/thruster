@@ -7,6 +7,8 @@ public class SliceBehaviour : MonoBehaviour {
 	public GameObject Slicee;
 	public Material Material;
 	public bool Debug;
+	public bool CheckForHoles;
+	public bool Optimise;
 
 	public float Tolerance = 0.01f;
 	public float RotationTolerance = 1;
@@ -23,7 +25,7 @@ public class SliceBehaviour : MonoBehaviour {
 
     private void Start() {
     	MeshFilter f = Slicee.GetComponent<MeshFilter>();
-        slicer = new Slicer(f.mesh);
+        slicer = new Slicer(f.mesh, Optimise, CheckForHoles);
 
 		oldPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
 		oldRotation = transform.rotation;
@@ -147,35 +149,41 @@ public class SliceBehaviour : MonoBehaviour {
 		UnityEngine.Debug.Log("Finished!");
 	}
 
+	private void DrawTriangle(Vector3 a, Vector3 b, Vector3 c, int width, Ray mouseRay, Vector3 circumcircleOrigin, float circumcircleRadius) {
+		MoreGizmos.DrawLine(a, b, width);
+		MoreGizmos.DrawLine(b, c, width);
+		MoreGizmos.DrawLine(c, a, width);
+
+		if (Triangle.Intersects(a, b, c, mouseRay)) {
+			MoreGizmos.DrawCircle(circumcircleOrigin, slicerDebug.Plane.normal, circumcircleRadius, 1);
+		}
+	}
+
 	private void OnDrawGizmos() {
 		if (slicerDebug == null) {
 			return;
 		}
 
+		Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
+
 		Vector3 offset = Slicee.transform.position;
+		Gizmos.color = Color.white;
 		foreach (Triangle3D tri in slicerDebug.AllTriangles) {
-			Gizmos.color = Color.white;
-			MoreGizmos.DrawLine(tri.a + offset, tri.b + offset, 3);
-			MoreGizmos.DrawLine(tri.b + offset, tri.c + offset, 3);
-			MoreGizmos.DrawLine(tri.c + offset, tri.a + offset, 3);
+			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 3, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
 		}
 
+		Gizmos.color = Color.red;
 		foreach (Triangle3D tri in slicerDebug.BadTriangles) {
-			Gizmos.color = Color.red;
-			MoreGizmos.DrawLine(tri.a + offset, tri.b + offset, 3);
-			MoreGizmos.DrawLine(tri.b + offset, tri.c + offset, 3);
-			MoreGizmos.DrawLine(tri.c + offset, tri.a + offset, 3);
+			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 5, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
 		}
 
+		Gizmos.color = Color.green;
 		foreach (Triangle3D tri in slicerDebug.NewTriangles) {
-			Gizmos.color = Color.green;
-			MoreGizmos.DrawLine(tri.a + offset, tri.b + offset, 3);
-			MoreGizmos.DrawLine(tri.b + offset, tri.c + offset, 3);
-			MoreGizmos.DrawLine(tri.c + offset, tri.a + offset, 3);
+			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 3, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
 		}
 
+		Gizmos.color = Color.yellow;
 		foreach (Vector3 point in slicerDebug.Perimiter) {
-			Gizmos.color = Color.yellow;
 			Gizmos.DrawSphere(point + offset, 0.05f);
 		}
 

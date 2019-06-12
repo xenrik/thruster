@@ -6,7 +6,7 @@ public struct Point2D {
     private static Point2D _zero = new Point2D(0, 0);
     public static Point2D zero { get { return _zero; } }
 
-    private const int PRECISION = 1;
+    private const int PRECISION = 4;
 
     public float x;
     public float y;

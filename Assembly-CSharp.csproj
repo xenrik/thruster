@@ -62,6 +62,7 @@
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Maths\Point2D.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Maths\Triangle2D.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Maths\Triangle3D.cs" />
+     <Compile Include="Assets\Scenes\TestSlicing\Scripts\Maths\TriangleIntersection.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Maths\Vector2Extensions.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\MoreGizmos.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\SliceBehaviour.cs" />

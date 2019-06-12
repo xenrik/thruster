@@ -715,7 +715,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Slicee: {fileID: 1140783994}
   Material: {fileID: 2100000, guid: dc1de1a5a32e90e42aa43a2e438939d5, type: 2}
-  Debug: 1
+  Debug: 0
+  CheckForHoles: 0
+  Optimise: 0
   Tolerance: 0.01
   RotationTolerance: 1
 --- !u!23 &1078879029

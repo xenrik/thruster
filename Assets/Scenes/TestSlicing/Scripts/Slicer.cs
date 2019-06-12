@@ -11,6 +11,7 @@ public class Slicer {
 
     private Mesh mesh;
     private bool optimise;
+    private bool checkForHoles;
 
     private object slicePos;
     private object sliceNeg;
@@ -25,9 +26,10 @@ public class Slicer {
     private List<Edge3D> edges = new List<Edge3D>();
     private HashSet<Edge2D> perimiter = new HashSet<Edge2D>();
 
-    public Slicer(Mesh mesh, bool optimise = false) {
+    public Slicer(Mesh mesh, bool optimise = false, bool checkForHoles = false) {
         this.mesh = mesh;
         this.optimise = optimise;
+        this.checkForHoles = checkForHoles;
     }
 
     public void slice(Plane p) {
@@ -218,7 +220,7 @@ public class Slicer {
          
         UnityEngine.Debug.Log($"Perimiter has {perimiter.Count} edges");
 
-        BowyerWatsonFill fill = new BowyerWatsonFill(perimiter);
+        BowyerWatsonFill fill = new BowyerWatsonFill(perimiter, checkForHoles);
         if (debug != null) {
             debug.SetPlane(planeRot, p);
             foreach (Slicer.Debug result in fill.Fill(debug)) {
@@ -260,16 +262,16 @@ public class Slicer {
         public List<Triangle3D> NewTriangles { get; private set; }
         public List<Triangle3D> AllTriangles { get; private set; }
 
-        private Quaternion planeRot;
-        private Plane plane;
+        public Quaternion PlaneRot { get; private set; }
+        public Plane Plane { get; private set; }
 
         internal Debug() {
             Reset();
         }
 
         internal void SetPlane(Quaternion planeRot, Plane plane) {
-            this.planeRot = planeRot;
-            this.plane = plane;
+            this.PlaneRot = planeRot;
+            this.Plane = plane;
         }
 
         public void Reset() {
@@ -301,7 +303,7 @@ public class Slicer {
         }
 
         private Vector3 ConvertPoint(Point2D p) {
-            return (planeRot * p) - (plane.distance * plane.normal);
+            return (PlaneRot * p) - (Plane.distance * Plane.normal);
         }
 
         private Triangle3D ConvertTriangle(Triangle2D tri) {
@@ -310,7 +312,7 @@ public class Slicer {
             tri3d.b = ConvertPoint(tri.b);
             tri3d.c = ConvertPoint(tri.c);
 
-            tri3d.circumcircleOrigin = (planeRot * tri.circumcircleOrigin) - (plane.distance * plane.normal);
+            tri3d.circumcircleOrigin = (PlaneRot * tri.circumcircleOrigin) - (Plane.distance * Plane.normal);
             tri3d.circumcircleRadius = Mathf.Sqrt(tri.circumcircleRadiusSq);
 
             return tri3d;
