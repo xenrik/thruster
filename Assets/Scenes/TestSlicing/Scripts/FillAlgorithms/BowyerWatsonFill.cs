@@ -55,8 +55,12 @@ public class BowyerWatsonFill {
         }
 
         // Cleanup
+        HashSet<Edge2D> intersections = new HashSet<Edge2D>();
         badTriangles.Clear();
+        newTriangles.Clear();
+        int holes = 0;
         foreach (Triangle2D tri in triangles) {
+
             // If the triangle has a corner of the super triangle, remove it
             if (tri.HasPoint(superTriangle.a) || tri.HasPoint(superTriangle.b) || 
                     tri.HasPoint(superTriangle.c)) {
@@ -68,21 +72,34 @@ public class BowyerWatsonFill {
             // see how many times we cross the perimiter. 
             // If this is even, we are outside the perimiter.      
             if (checkForHoles) {
-                int count = 0;
-                Point2D a = tri.CentroidPoint();
-                Point2D b = new Point2D(float.MinValue, float.MinValue);
+                newTriangles.Clear();
+                intersections.Clear();
+
+                Point2D centroid = tri.CentroidPoint();
 
                 foreach (Edge2D edge in perimiter) {
-                    if (edge.Intersects(a, b)) {
-                        count++;
+                    if (edge.Intersects(centroid, superTriangle.a)) {
+                        intersections.Add(edge);
                     }
                 }
+                if (intersections.Count % 2 == 0) {
+                    newTriangles.Add(tri);
+                    if (debug != null) {
+                        Debug.Log($"Intersections for: {tri} = {intersections.Count} (remove)");
+                        yield return PopulateDebug(debug, testTriangle: tri, testEdge: new Edge2D(centroid, superTriangle.a));
+                    }
 
-                if (count % 2 == 0) {
+                    ++holes;
                     badTriangles.Add(tri);
+                } else if (debug != null) {
+                    Debug.Log($"Intersections for: {tri} = {intersections.Count}");
+                    yield return PopulateDebug(debug, testTriangle: tri, testEdge: new Edge2D(centroid, superTriangle.a));
                 }
+
             }
         }
+
+        Debug.Log($"Removed {holes} triangles that were holes");
 
         foreach (Triangle2D tri in badTriangles) {
             triangles.Remove(tri);
@@ -168,9 +185,17 @@ public class BowyerWatsonFill {
         triangles.UnionWith(newTriangles);
     }
 
-    private Slicer.Debug PopulateDebug(Slicer.Debug debug, Point2D testPoint) {
+    private Slicer.Debug PopulateDebug(Slicer.Debug debug, Point2D? testPoint = null, Triangle2D? testTriangle = null, Edge2D? testEdge = null) {
         debug.Reset();
-        debug.SetTestPoint(testPoint);
+        if (testPoint != null) {
+            debug.SetTestPoint((Point2D)testPoint);
+        }
+        if (testTriangle != null) {
+            debug.SetTestTriangle((Triangle2D)testTriangle);
+        }
+        if (testEdge != null) {
+            debug.SetTestEdge((Edge2D)testEdge);
+        }
 
         foreach (Edge2D edge in perimiter) {
             debug.AddPerimiterPoint(edge.a);

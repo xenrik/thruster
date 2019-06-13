@@ -44,7 +44,10 @@ public class SliceBehaviour : MonoBehaviour {
 			}
 			slices.Clear();
 
+			//Quaternion relativeNormal = Quaternion.LookRotation(transform.up) * Quaternion.Inverse(Slicee.transform.rotation);
+			//plane.SetNormalAndPosition(relativeNormal.eulerAngles, transform.position);
 			plane.SetNormalAndPosition(transform.up, transform.position);
+
 			Bounds b = new Bounds();
 			foreach (Renderer r in Slicee.GetComponentsInChildren<Renderer>()) {
 				b.Encapsulate(r.bounds);
@@ -100,6 +103,7 @@ public class SliceBehaviour : MonoBehaviour {
 
 		GameObject posGO = new GameObject();
 		posGO.transform.position = Slicee.transform.position;
+		posGO.transform.rotation = Slicee.transform.rotation;
 		slices.Add(posGO);
 
 		renderer = posGO.AddComponent<MeshRenderer>();
@@ -111,6 +115,7 @@ public class SliceBehaviour : MonoBehaviour {
 
 		GameObject negGO = new GameObject();
 		negGO.transform.position = Slicee.transform.position;
+		negGO.transform.rotation = Slicee.transform.rotation;
 		slices.Add(negGO);
 
 		renderer = negGO.AddComponent<MeshRenderer>();
@@ -188,6 +193,20 @@ public class SliceBehaviour : MonoBehaviour {
 		}
 
 		Gizmos.color = Color.blue;
-		Gizmos.DrawSphere(slicerDebug.CurrentPoint + offset, 0.05f);
+		if (!slicerDebug.CurrentPoint.Equals(Vector3.zero)) {
+			Gizmos.DrawSphere(slicerDebug.CurrentPoint + offset, 0.05f);
+		}
+		if (slicerDebug.CurrentTriangle.circumcircleRadius > 0) {
+			Triangle3D tri = slicerDebug.CurrentTriangle;
+			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 1, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
+		}
+		
+		Gizmos.color = Color.cyan;
+		if (!slicerDebug.CurrentEdge.a.Equals(Vector3.zero) || !slicerDebug.CurrentEdge.b.Equals(Vector3.zero)) {
+			Vector3 a = slicerDebug.CurrentEdge.a + offset;
+			Vector3 b = slicerDebug.CurrentEdge.b + offset;
+
+			MoreGizmos.DrawLine(a, b, 2);
+		}
 	}
 }

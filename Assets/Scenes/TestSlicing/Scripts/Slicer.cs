@@ -256,7 +256,10 @@ public class Slicer {
 
     public class Debug {
         public List<Vector3> Perimiter { get; private set; }
+
         public Vector3 CurrentPoint { get; private set; }
+        public Triangle3D CurrentTriangle { get; private set; }
+        public Edge3D CurrentEdge { get; private set; }
 
         public List<Triangle3D> BadTriangles { get; private set; }
         public List<Triangle3D> NewTriangles { get; private set; }
@@ -276,6 +279,9 @@ public class Slicer {
 
         public void Reset() {
             CurrentPoint = Vector3.zero;
+            CurrentTriangle = new Triangle3D();
+            CurrentEdge = new Edge3D();
+            
             Perimiter = new List<Vector3>();
             BadTriangles = new List<Triangle3D>();
             NewTriangles = new List<Triangle3D>();
@@ -284,6 +290,18 @@ public class Slicer {
 
         public void SetTestPoint(Point2D p) {
             CurrentPoint = ConvertPoint(p);
+        }
+
+        public void SetTestTriangle(Triangle2D tri) {
+            CurrentTriangle = ConvertTriangle(tri);
+        }
+
+        public void SetTestEdge(Edge2D edge) {
+            CurrentEdge = new Edge3D(
+                ConvertPoint(edge.a),
+                ConvertPoint(edge.b),
+                Vector3.zero
+            );
         }
 
         public void AddPerimiterPoint(Point2D p) {
