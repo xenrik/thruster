@@ -19,4 +19,8 @@ public struct Edge3D {
         float d = Vector3.Dot(Vector3.Cross(p - a, direction), normal);
         return d < 0 ? -1 : d > 0 ? 1 : 0;
     }
+
+    public override string ToString() {
+        return $"[{a.ToString("F4")},{b.ToString("F4")}]";
+    }
 }

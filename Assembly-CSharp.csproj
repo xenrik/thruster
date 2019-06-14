@@ -74,6 +74,7 @@
      <Compile Include="Assets\Scripts\CrossSectionController.cs" />
      <Compile Include="Assets\Scripts\CrossSectionController2.cs" />
      <Compile Include="Assets\Scripts\CrossSectionMaterial.cs" />
+     <Compile Include="Assets\Scripts\Debug\HighlightTriangle.cs" />
      <Compile Include="Assets\Scripts\DestroyOnContact.cs" />
      <Compile Include="Assets\Scripts\EnableMe.cs" />
      <Compile Include="Assets\Scripts\Exploder.cs" />

@@ -214,7 +214,9 @@ public class Slicer {
         foreach (Edge3D e in edges) {
             Point2D a = new Point2D(rot * (e.a - (p.distance * p.normal)));
             Point2D b = new Point2D(rot * (e.b - (p.distance * p.normal)));
-            
+
+            UnityEngine.Debug.Log($"--> {e} ===> [{a},{b}]");
+
             perimiter.Add(new Edge2D(a,b));
         }
          
@@ -244,6 +246,8 @@ public class Slicer {
             tri3d.c = tri.c;
             tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
             tri3d.ci = vertices.Count + 2;
+
+            UnityEngine.Debug.Log("<--" + tri3d);
 
             vertices.Add(tri3d.a); colours.Add(Color.red);
             vertices.Add(tri3d.b); colours.Add(Color.green);

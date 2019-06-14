@@ -6,7 +6,7 @@ public struct Point2D {
     private static Point2D _zero = new Point2D(0, 0);
     public static Point2D zero { get { return _zero; } }
 
-    private const int PRECISION = 4;
+    private const long PRECISION = 4;
 
     public float x;
     public float y;
@@ -18,8 +18,12 @@ public struct Point2D {
 
     public Point2D(float x, float y) {
         if (PRECISION > 0) {
-            this.x = (float)Math.Round(x, PRECISION);
-            this.y = (float)Math.Round(y, PRECISION);
+            float FACTOR = Mathf.Pow(10, PRECISION);
+            long xl = (long)(x * FACTOR);
+            this.x = xl / FACTOR;
+
+            long yl = (long)(y * FACTOR);
+            this.y = yl / FACTOR;
         } else {
             this.x = x;
             this.y = y;
@@ -42,7 +46,7 @@ public struct Point2D {
     }
 
     public override string ToString() {
-        return $"[{x:F2},{y:F2}]";
+        return $"[{x:F4},{y:F4}]";
     }
     
     public static implicit operator Vector3(Point2D point) {

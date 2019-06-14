@@ -128,18 +128,21 @@ public class SliceBehaviour : MonoBehaviour {
 
 		if (Debug) {
 			StopAllCoroutines();
-			StartCoroutine(sliceDebug(plane, posFilter, negFilter));
+			StartCoroutine(sliceDebug(plane, posGO, posFilter, negGO, negFilter));
 		} else {
 			slicer.slice(plane);
 
 			posFilter.mesh = slicer.posMesh;
+			posGO.AddComponent<MeshCollider>();
+
 			negFilter.mesh = slicer.negMesh;
+			negGO.AddComponent<MeshCollider>();
 
 			UnityEngine.Debug.Log("Finished!");
 		}
 	}
 
-	private IEnumerator sliceDebug(Plane p, MeshFilter posFilter, MeshFilter negFilter) {
+	private IEnumerator sliceDebug(Plane p, GameObject posGO, MeshFilter posFilter, GameObject negGO, MeshFilter negFilter) {
 		foreach (Slicer.Debug debug in slicer.sliceDebug(plane)) {
 			slicerDebug = debug;
 
@@ -149,7 +152,10 @@ public class SliceBehaviour : MonoBehaviour {
 
 		slicerDebug = null;
 		posFilter.mesh = slicer.posMesh;
+		posGO.AddComponent<MeshCollider>();
+
 		negFilter.mesh = slicer.negMesh;
+		negGO.AddComponent<MeshCollider>();
 
 		UnityEngine.Debug.Log("Finished!");
 	}
