@@ -15,6 +15,10 @@ public class HighlightTriangle : MonoBehaviour {
     }
 
     private void OnDrawGizmos() {
+        if (!isActiveAndEnabled) {
+            return;
+        }
+
         RaycastHit hit;
         //Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 		Ray ray = UnityEditor.HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);

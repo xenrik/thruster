@@ -113,6 +113,7 @@ public class Slicer {
 
         //Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
         //Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
+        yield break;
     }
 
     private void splitTriangle(Triangle3D t, Plane p) {
@@ -205,17 +206,15 @@ public class Slicer {
 
     private IEnumerable<Slicer.Debug> fillHolesBowyerWatson(Plane p, Slicer.Debug debug) {
         // Rotate the edges to be on a horizontal plane at the origin
-        Quaternion up = Quaternion.Euler(Vector3.up);
+        Quaternion up = Quaternion.LookRotation(Vector3.up);
         Quaternion planeRot = Quaternion.LookRotation(p.normal);
-        Quaternion inorm = Quaternion.Inverse(planeRot);
-        Quaternion rot = up * inorm;
+        Quaternion rot = up * Quaternion.Inverse(planeRot);
+        Quaternion irot = Quaternion.Inverse(rot);
 
         perimiter.Clear();
         foreach (Edge3D e in edges) {
-            Point2D a = new Point2D(rot * (e.a - (p.distance * p.normal)));
-            Point2D b = new Point2D(rot * (e.b - (p.distance * p.normal)));
-
-            UnityEngine.Debug.Log($"--> {e} ===> [{a},{b}]");
+            Vector3 a = rot * (e.a + (p.distance * p.normal));
+            Vector3 b = rot * (e.b + (p.distance * p.normal));
 
             perimiter.Add(new Edge2D(a,b));
         }
@@ -235,26 +234,24 @@ public class Slicer {
         // Reorient and add to both the positivie and negative triangle lists
         foreach (Triangle2D tri in fill.Triangles) {
             Triangle3D tri3d = new Triangle3D();
-            tri3d.a = tri.a;
-            tri3d.a = (planeRot * tri3d.a) - (p.distance * p.normal);
+            tri3d.a = tri.a.v;
+            tri3d.a = (irot * tri3d.a) - (p.distance * p.normal);
             tri3d.ai = vertices.Count;
 
-            tri3d.b = tri.b;
-            tri3d.b = (planeRot * tri3d.b) - (p.distance * p.normal);
+            tri3d.b = tri.b.v;
+            tri3d.b = (irot * tri3d.b) - (p.distance * p.normal);
             tri3d.bi = vertices.Count + 1;
 
-            tri3d.c = tri.c;
-            tri3d.c = (planeRot * tri3d.c) - (p.distance * p.normal);
+            tri3d.c = tri.c.v;
+            tri3d.c = (irot * tri3d.c) - (p.distance * p.normal);
             tri3d.ci = vertices.Count + 2;
-
-            UnityEngine.Debug.Log("<--" + tri3d);
 
             vertices.Add(tri3d.a); colours.Add(Color.red);
             vertices.Add(tri3d.b); colours.Add(Color.green);
             vertices.Add(tri3d.c); colours.Add(Color.yellow);
 
-            posTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
-            negTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
+            posTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
+            negTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
         }
     }
 

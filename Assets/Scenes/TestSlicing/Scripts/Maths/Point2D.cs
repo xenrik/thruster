@@ -8,12 +8,15 @@ public struct Point2D {
 
     private const long PRECISION = 4;
 
-    public float x;
-    public float y;
+    public float x { get; private set; }
+    public float y { get; private set; }
+
+    public Vector3 v { get; private set; }
 
     private int hashCode;
 
-    public Point2D(Vector3 p) : this(p.x, p.y) {
+    public Point2D(Vector3 p) : this(p.x, p.z) {
+        this.v = p;
     }
 
     public Point2D(float x, float y) {
@@ -29,6 +32,7 @@ public struct Point2D {
             this.y = y;
         }
 
+        this.v = new Vector3(this.x, 0, this.y);
         this.hashCode = (int)(this.x + (31 * this.y));
     }
 
@@ -47,6 +51,14 @@ public struct Point2D {
 
     public override string ToString() {
         return $"[{x:F4},{y:F4}]";
+    }
+    
+    public static implicit operator Point2D(Vector2 point) {
+        return new Point2D(point.x, point.y);
+    }
+    
+    public static implicit operator Point2D(Vector3 point) {
+        return new Point2D(point);
     }
     
     public static implicit operator Vector3(Point2D point) {

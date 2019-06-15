@@ -12,8 +12,8 @@ public class BowyerWatsonFill {
 
     private HashSet<Triangle2D> triangles = new HashSet<Triangle2D>();
     private HashSet<Triangle2D> newTriangles = new HashSet<Triangle2D>();
-    private Point2D min;
-    private Point2D max;
+    private Vector2 min;
+    private Vector2 max;
 
     private Dictionary<Edge2D,int> polygon = new Dictionary<Edge2D, int>(new Edge2D.EquivalentComparator());
     private HashSet<Triangle2D> badTriangles = new HashSet<Triangle2D>();
@@ -39,7 +39,7 @@ public class BowyerWatsonFill {
     }
 
     public IEnumerable<Slicer.Debug> Fill(Slicer.Debug debug) {
-        Triangle2D superTriangle = findSuperTriangle(min - new Point2D(1, 1), max + new Point2D(1, 1));
+        Triangle2D superTriangle = findSuperTriangle(min - new Vector2(1, 1), max + new Vector2(1, 1));
         triangles.Add(superTriangle);
 
         foreach (Edge2D point in perimiter) {
