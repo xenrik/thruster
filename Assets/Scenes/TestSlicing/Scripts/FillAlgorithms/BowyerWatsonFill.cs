@@ -99,7 +99,7 @@ public class BowyerWatsonFill {
             }
         }
 
-        Debug.Log($"Removed {holes} triangles that were holes");
+        //Debug.Log($"Removed {holes} triangles that were holes");
 
         foreach (Triangle2D tri in badTriangles) {
             triangles.Remove(tri);

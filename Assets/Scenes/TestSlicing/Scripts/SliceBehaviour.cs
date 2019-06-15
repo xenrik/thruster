@@ -44,9 +44,11 @@ public class SliceBehaviour : MonoBehaviour {
 			}
 			slices.Clear();
 
-			//Quaternion relativeNormal = Quaternion.LookRotation(transform.up) * Quaternion.Inverse(Slicee.transform.rotation);
-			//plane.SetNormalAndPosition(relativeNormal.eulerAngles, transform.position);
-			plane.SetNormalAndPosition(transform.up, transform.position);
+			Quaternion rot = Quaternion.FromToRotation(Slicee.transform.up, transform.up);
+			Vector3 normal = rot * Vector3.up;
+
+			plane.SetNormalAndPosition(normal, transform.position);
+			
 
 			Bounds b = new Bounds();
 			foreach (Renderer r in Slicee.GetComponentsInChildren<Renderer>()) {
@@ -134,6 +136,7 @@ public class SliceBehaviour : MonoBehaviour {
 
 			posFilter.mesh = slicer.posMesh;
 			posGO.AddComponent<MeshCollider>();
+			posGO.SetActive(false);
 
 			negFilter.mesh = slicer.negMesh;
 			negGO.AddComponent<MeshCollider>();

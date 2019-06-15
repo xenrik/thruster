@@ -94,8 +94,8 @@ public class Slicer {
         //    ...
         // }
 
-        UnityEngine.Debug.Log("Split " + count + " triangles");
-        UnityEngine.Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
+        //UnityEngine.Debug.Log("Split " + count + " triangles");
+        //UnityEngine.Debug.Log("Original Mesh: " + existingVertices.Length + " vertices, " + triangles.Length/3 + " triangles");
 
         posMesh = new Mesh();
         posMesh.vertices = vertices.ToArray();
@@ -219,7 +219,7 @@ public class Slicer {
             perimiter.Add(new Edge2D(a,b));
         }
          
-        UnityEngine.Debug.Log($"Perimiter has {perimiter.Count} edges");
+        //UnityEngine.Debug.Log($"Perimiter has {perimiter.Count} edges");
 
         BowyerWatsonFill fill = new BowyerWatsonFill(perimiter, checkForHoles);
         if (debug != null) {
