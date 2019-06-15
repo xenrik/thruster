@@ -65,6 +65,7 @@
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Maths\TriangleIntersection.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Maths\Vector2Extensions.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\MoreGizmos.cs" />
+     <Compile Include="Assets\Scenes\TestSlicing\Scripts\SimpleRotator.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\SliceBehaviour.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Slicee.cs" />
      <Compile Include="Assets\Scenes\TestSlicing\Scripts\Slicer.cs" />

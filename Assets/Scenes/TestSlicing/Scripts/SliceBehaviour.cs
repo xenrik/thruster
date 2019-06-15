@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEditor;
 
 public class SliceBehaviour : MonoBehaviour {
@@ -36,7 +37,7 @@ public class SliceBehaviour : MonoBehaviour {
 		UnityEngine.Debug.DrawRay(transform.position, transform.up * 5, Color.red);
 		Vector3 offset = transform.position - oldPosition;
 		float rotationOffset = Quaternion.Angle(transform.rotation, oldRotation);
-		if (offset.magnitude > Tolerance || rotationOffset > RotationTolerance) {
+		if (offset.magnitude > Tolerance || rotationOffset > RotationTolerance || true) {
 			StopAllCoroutines();
 
 			foreach (GameObject slice in slices) {
@@ -59,7 +60,9 @@ public class SliceBehaviour : MonoBehaviour {
 				UnityEngine.Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
 				
+				Profiler.BeginSample("Slice", this);
 				slice(plane);
+				Profiler.EndSample();
 
 				Slicee.SetActive(false);
 			} else {
@@ -70,7 +73,7 @@ public class SliceBehaviour : MonoBehaviour {
 			oldPosition = transform.position;
 			oldRotation = transform.rotation;
 		}
-     }
+    }
 
 	private bool PlaneIntersects(Plane p, Bounds b) {
 		bool side = p.GetSide(b.min);
@@ -173,6 +176,7 @@ public class SliceBehaviour : MonoBehaviour {
 		}
 	}
 
+	/*
 	private void OnDrawGizmos() {
 		if (slicerDebug == null) {
 			return;
@@ -218,4 +222,5 @@ public class SliceBehaviour : MonoBehaviour {
 			MoreGizmos.DrawLine(a, b, 2);
 		}
 	}
+	*/
 }

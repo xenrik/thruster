@@ -19,9 +19,10 @@ public class HighlightTriangle : MonoBehaviour {
             return;
         }
 
+        /*
         RaycastHit hit;
         //Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-		Ray ray = UnityEditor.HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
+		Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
         if (!Physics.Raycast(ray, out hit))
             return;
 
@@ -54,5 +55,6 @@ public class HighlightTriangle : MonoBehaviour {
             lastPointB = worldB;
             lastPointC = worldC;
         }
+        */
     }
 }
