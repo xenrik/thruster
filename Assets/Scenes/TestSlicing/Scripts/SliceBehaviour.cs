@@ -57,16 +57,14 @@ public class SliceBehaviour : MonoBehaviour {
 			}
 
 			if (PlaneIntersects(plane, b)) {
-				UnityEngine.Debug.Log("Slice!");
+				//UnityEngine.Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
 				
-				Profiler.BeginSample("Slice", this);
 				slice(plane);
-				Profiler.EndSample();
 
 				Slicee.SetActive(false);
 			} else {
-				UnityEngine.Debug.Log("OOB");
+				//UnityEngine.Debug.Log("OOB");
 				Slicee.SetActive(true);
 			}
 
@@ -104,6 +102,7 @@ public class SliceBehaviour : MonoBehaviour {
 	}
 
 	private void slice(Plane p) {
+		ScriptProfiler.GetInstance().StartGroup("Slice");
 		MeshRenderer renderer;
 
 		GameObject posGO = new GameObject();
@@ -135,7 +134,9 @@ public class SliceBehaviour : MonoBehaviour {
 			StopAllCoroutines();
 			StartCoroutine(sliceDebug(plane, posGO, posFilter, negGO, negFilter));
 		} else {
+			Profiler.BeginSample("Slice", this);
 			slicer.slice(plane);
+			Profiler.EndSample();
 
 			posFilter.mesh = slicer.posMesh;
 			posGO.AddComponent<MeshCollider>();
@@ -144,8 +145,11 @@ public class SliceBehaviour : MonoBehaviour {
 			negFilter.mesh = slicer.negMesh;
 			negGO.AddComponent<MeshCollider>();
 
-			UnityEngine.Debug.Log("Finished!");
+			//UnityEngine.Debug.Log("Finished!");
 		}
+
+		ScriptProfiler.GetInstance().EndGroup();
+		ScriptProfiler.GetInstance().Report();
 	}
 
 	private IEnumerator sliceDebug(Plane p, GameObject posGO, MeshFilter posFilter, GameObject negGO, MeshFilter negFilter) {
@@ -163,7 +167,7 @@ public class SliceBehaviour : MonoBehaviour {
 		negFilter.mesh = slicer.negMesh;
 		negGO.AddComponent<MeshCollider>();
 
-		UnityEngine.Debug.Log("Finished!");
+		//UnityEngine.Debug.Log("Finished!");
 	}
 
 	private void DrawTriangle(Vector3 a, Vector3 b, Vector3 c, int width, Ray mouseRay, Vector3 circumcircleOrigin, float circumcircleRadius) {

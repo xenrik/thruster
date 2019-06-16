@@ -21,6 +21,8 @@ public class BowyerWatsonFill {
     private bool checkForHoles;
 
     public BowyerWatsonFill(ICollection<Edge2D> perimiter, bool checkForHoles) {
+        ScriptProfiler.GetInstance().StartMethod();
+
         this.perimiter = perimiter;
         this.checkForHoles = checkForHoles;
 
@@ -30,18 +32,27 @@ public class BowyerWatsonFill {
             max.x = Mathf.Max(max.x, edge.a.x, edge.b.x);
             max.y = Mathf.Max(max.y, edge.a.y, edge.b.y);
         }
+    
+        ScriptProfiler.GetInstance().EndMethod();
     }
 
-    public void Fill() {
+    public void Fill() {    
+        ScriptProfiler.GetInstance().StartMethod();
+
         foreach (Slicer.Debug debug in Fill(null)) {
             // Do nothing
         }
+        
+        ScriptProfiler.GetInstance().EndMethod();
     }
 
-    public IEnumerable<Slicer.Debug> Fill(Slicer.Debug debug) {
+    public IEnumerable<Slicer.Debug> Fill(Slicer.Debug debug) {        
+        ScriptProfiler.GetInstance().StartMethod();
+
         Triangle2D superTriangle = findSuperTriangle(min - new Vector2(1, 1), max + new Vector2(1, 1));
         triangles.Add(superTriangle);
 
+        ScriptProfiler.GetInstance().StartGroup("Fill");
         foreach (Edge2D point in perimiter) {
             processPoint(point.a, debug != null);
             if (debug != null) {
@@ -52,9 +63,11 @@ public class BowyerWatsonFill {
             if (debug != null) {
                 yield return PopulateDebug(debug, point.b);
             }
-        }
+        }        
+        ScriptProfiler.GetInstance().EndGroup();
 
-        // Cleanup
+        // Cleanup        
+        ScriptProfiler.GetInstance().StartGroup("Cleanup");
         HashSet<Edge2D> intersections = new HashSet<Edge2D>();
         badTriangles.Clear();
         newTriangles.Clear();
@@ -104,6 +117,8 @@ public class BowyerWatsonFill {
         foreach (Triangle2D tri in badTriangles) {
             triangles.Remove(tri);
         }
+        ScriptProfiler.GetInstance().EndGroup();
+        ScriptProfiler.GetInstance().EndMethod();
     }
     
     /**
