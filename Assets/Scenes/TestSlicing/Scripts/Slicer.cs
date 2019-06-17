@@ -33,13 +33,13 @@ public class Slicer {
     }
 
     public void slice(Plane p) {
-        ScriptProfiler.GetInstance().StartMethod();
+        ScriptProfiler.StartMethod();
 
         foreach (Slicer.Debug debug in doSlice(p, null)) {
             // Do nothing
         }
 
-        ScriptProfiler.GetInstance().EndMethod();
+        ScriptProfiler.EndMethod();
     }
 
     public IEnumerable<Slicer.Debug> sliceDebug(Plane p) {
@@ -49,7 +49,7 @@ public class Slicer {
     }
 
     private IEnumerable<Slicer.Debug> doSlice(Plane p, Slicer.Debug debug) {
-        ScriptProfiler.GetInstance().StartMethod();
+        ScriptProfiler.StartMethod();
 
         Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
@@ -119,7 +119,7 @@ public class Slicer {
 
         //Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
         //Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
-        ScriptProfiler.GetInstance().EndMethod();
+        ScriptProfiler.EndMethod();
 
         yield break;
     }
@@ -213,7 +213,7 @@ public class Slicer {
     }
 
     private IEnumerable<Slicer.Debug> fillHolesBowyerWatson(Plane p, Slicer.Debug debug) {
-        ScriptProfiler.GetInstance().StartMethod();
+        ScriptProfiler.StartMethod();
 
         // Rotate the edges to be on a horizontal plane at the origin
         Quaternion up = Quaternion.LookRotation(Vector3.up);
@@ -264,7 +264,7 @@ public class Slicer {
             negTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
         }
 
-        ScriptProfiler.GetInstance().EndMethod();
+        ScriptProfiler.EndMethod();
     }
 
     public class Debug {

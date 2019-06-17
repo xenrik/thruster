@@ -102,7 +102,7 @@ public class SliceBehaviour : MonoBehaviour {
 	}
 
 	private void slice(Plane p) {
-		ScriptProfiler.GetInstance().StartGroup("Slice");
+		ScriptProfiler.StartGroup("Slice");
 		MeshRenderer renderer;
 
 		GameObject posGO = new GameObject();
@@ -148,8 +148,8 @@ public class SliceBehaviour : MonoBehaviour {
 			//UnityEngine.Debug.Log("Finished!");
 		}
 
-		ScriptProfiler.GetInstance().EndGroup();
-		ScriptProfiler.GetInstance().Report();
+		ScriptProfiler.EndGroup();
+		ScriptProfiler.Report(ReportMode.Method);
 	}
 
 	private IEnumerator sliceDebug(Plane p, GameObject posGO, MeshFilter posFilter, GameObject negGO, MeshFilter negFilter) {
