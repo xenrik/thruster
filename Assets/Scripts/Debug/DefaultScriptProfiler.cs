@@ -30,7 +30,7 @@ public class DefaultScriptProfiler : IScriptProfiler {
     }
 
     public void EndMethod() {
-        currentEntry.Duration += currentEntry.StopWatch.ElapsedMilliseconds;
+        currentEntry.Ticks += currentEntry.StopWatch.ElapsedTicks;
         currentEntry.StopWatch.Stop();
         currentEntry.StopWatch = null;
 
@@ -48,7 +48,7 @@ public class DefaultScriptProfiler : IScriptProfiler {
     }
 
     public void EndGroup() {
-        currentEntry.Duration += currentEntry.StopWatch.ElapsedMilliseconds;
+        currentEntry.Ticks += currentEntry.StopWatch.ElapsedTicks;
         currentEntry.StopWatch.Stop();
         currentEntry.StopWatch = null;
 
@@ -81,7 +81,7 @@ public class DefaultScriptProfiler : IScriptProfiler {
                 line += child.TypeName + "#" + child.MethodName;
             }
 
-            line = line.PadRight(50) + child.Duration.ToString().PadLeft(8);
+            line = line.PadRight(50) + child.DurationMS.ToString().PadLeft(8);
             buffer.AppendLine(line);
 
             ReportTree(child, depth + 1, buffer);
@@ -117,7 +117,7 @@ public class DefaultScriptProfiler : IScriptProfiler {
             }
 
             existingData.Calls++;
-            existingData.Duration += data.Duration;
+            existingData.Ticks += data.Ticks;
 
             // Now include group
             if (data.Group.Length == 0) {
@@ -131,12 +131,12 @@ public class DefaultScriptProfiler : IScriptProfiler {
             }
 
             existingData.Calls++;
-            existingData.Duration += data.Duration;
+            existingData.Ticks += data.Ticks;
         }
 
         // Sort and Report
         StringBuilder buffer = new StringBuilder();
-        var sortedData = groupedData.Values.OrderBy(data => data.Duration);
+        var sortedData = groupedData.Values.OrderBy(data => data.Ticks);
         foreach (ProfileData data in groupedData.Values) {
             String line = data.TypeName + "#"+ data.MethodName;
             if (data.Group.Length > 0) {
@@ -147,8 +147,8 @@ public class DefaultScriptProfiler : IScriptProfiler {
 
             line = line.PadRight(50);
             line += "Calls: " + data.Calls.ToString().PadLeft(5);
-            line += " Total Duration: " + data.Duration.ToString().PadLeft(8) + "ms";
-            line += " Avg Duration: " + (data.Duration / data.Calls).ToString().PadLeft(8) + "ms/call";
+            line += " Total Duration: " + data.DurationMS.ToString().PadLeft(8) + "ms";
+            line += " Avg Duration: " + (data.DurationMS / data.Calls).ToString().PadLeft(8) + "ms/call";
 
             buffer.AppendLine(line);
         }
@@ -212,10 +212,21 @@ public class DefaultScriptProfiler : IScriptProfiler {
         public string MethodName;
         public int LineNo;
 
-        public long Duration;
+        public long Ticks;
         public long Calls;
 
         public System.Diagnostics.Stopwatch StopWatch;
+
+        public long DurationNS {
+            get {
+                return Ticks * 100;
+            }
+        }
+        public long DurationMS {
+            get {
+                return DurationNS / 1000000;
+            }
+        }
 
         public ProfileData() {
             Children = new List<ProfileData>();
@@ -225,7 +236,7 @@ public class DefaultScriptProfiler : IScriptProfiler {
             this.MethodName = "";
             this.LineNo = 0;
 
-            this.Duration = 0;
+            this.Ticks = 0;
             this.Calls = 0;
 
             this.StopWatch = null;

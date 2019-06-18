@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 
-public struct Triangle2D {
+public class Triangle2D {
     public Point2D a { get; }
     public Point2D b { get; }
     public Point2D c { get; }
@@ -9,7 +9,8 @@ public struct Triangle2D {
     public Vector2 circumcircleOrigin { get; private set; }
     public float circumcircleRadiusSq { get; private set; }
 
-    private int hashCode;
+    private int hashCode = -1;
+    private bool calculatedCirumcircle = false;
 
     public Triangle2D(Point2D a, Point2D b, Point2D c) {
         this.a = a;
@@ -18,13 +19,8 @@ public struct Triangle2D {
 
         this.circumcircleOrigin = Vector2.zero;
         this.circumcircleRadiusSq = 0;
-
-        int prime = 31;
-        hashCode = this.a.GetHashCode();
-        hashCode = hashCode * prime + this.b.GetHashCode();
-        hashCode = hashCode * prime + this.c.GetHashCode();
         
-        calculateCircumcircle();
+        //calculateCircumcircle();
     }
 
     public override string ToString() {
@@ -41,11 +37,17 @@ public struct Triangle2D {
     }
 
     public override int GetHashCode() {
+        if (hashCode == -1) {
+            hashCode = this.a.GetHashCode();
+            hashCode = hashCode * 31 + this.b.GetHashCode();
+            hashCode = hashCode * 31 + this.c.GetHashCode();
+        }
+        
         return hashCode;
     }
 
     public bool CircumcircleContains(Point2D p) {
-        if (circumcircleRadiusSq == 0) {
+        if (!calculatedCirumcircle) {
             calculateCircumcircle();
         }
 
@@ -109,5 +111,6 @@ public struct Triangle2D {
         float dx = b.x - xc;
         float dy = b.y - yc;
         circumcircleRadiusSq = dx*dx + dy*dy;
+        calculatedCirumcircle = true;
     }
 }

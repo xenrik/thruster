@@ -22,7 +22,6 @@ public class SliceBehaviour : MonoBehaviour {
 	private Plane plane;
 
 	private HashSet<GameObject> slices = new HashSet<GameObject>();
-	private Slicer.Debug slicerDebug = null;
 
     private void Start() {
     	MeshFilter f = Slicee.GetComponent<MeshFilter>();
@@ -50,21 +49,17 @@ public class SliceBehaviour : MonoBehaviour {
 
 			plane.SetNormalAndPosition(normal, transform.position);
 			
-
 			Bounds b = new Bounds();
 			foreach (Renderer r in Slicee.GetComponentsInChildren<Renderer>()) {
 				b.Encapsulate(r.bounds);
 			}
 
 			if (PlaneIntersects(plane, b)) {
-				//UnityEngine.Debug.Log("Slice!");
 				plane.Translate(Slicee.transform.position);
-				
 				slice(plane);
 
 				Slicee.SetActive(false);
 			} else {
-				//UnityEngine.Debug.Log("OOB");
 				Slicee.SetActive(true);
 			}
 
@@ -102,20 +97,7 @@ public class SliceBehaviour : MonoBehaviour {
 	}
 
 	private void slice(Plane p) {
-		ScriptProfiler.StartGroup("Slice");
 		MeshRenderer renderer;
-
-		GameObject posGO = new GameObject();
-		posGO.transform.position = Slicee.transform.position;
-		posGO.transform.rotation = Slicee.transform.rotation;
-		slices.Add(posGO);
-
-		renderer = posGO.AddComponent<MeshRenderer>();
-		renderer.material = Material;
-
-		MeshFilter posFilter = posGO.AddComponent<MeshFilter>();
-		Mesh posMesh = new Mesh();
-		posFilter.mesh = posMesh;
 
 		GameObject negGO = new GameObject();
 		negGO.transform.position = Slicee.transform.position;
@@ -130,101 +112,9 @@ public class SliceBehaviour : MonoBehaviour {
 		Mesh negMesh = new Mesh();
 		negFilter.mesh = negMesh;
 
-		if (Debug) {
-			StopAllCoroutines();
-			StartCoroutine(sliceDebug(plane, posGO, posFilter, negGO, negFilter));
-		} else {
-			Profiler.BeginSample("Slice", this);
-			slicer.slice(plane);
-			Profiler.EndSample();
-
-			posFilter.mesh = slicer.posMesh;
-			posGO.AddComponent<MeshCollider>();
-			posGO.SetActive(false);
-
-			negFilter.mesh = slicer.negMesh;
-			negGO.AddComponent<MeshCollider>();
-
-			//UnityEngine.Debug.Log("Finished!");
-		}
-
-		ScriptProfiler.EndGroup();
-		ScriptProfiler.Report(ReportMode.Method);
-	}
-
-	private IEnumerator sliceDebug(Plane p, GameObject posGO, MeshFilter posFilter, GameObject negGO, MeshFilter negFilter) {
-		foreach (Slicer.Debug debug in slicer.sliceDebug(plane)) {
-			slicerDebug = debug;
-
-			UnityEngine.Debug.Break();
-			yield return true;
-		}
-
-		slicerDebug = null;
-		posFilter.mesh = slicer.posMesh;
-		posGO.AddComponent<MeshCollider>();
+		slicer.slice(plane);
 
 		negFilter.mesh = slicer.negMesh;
 		negGO.AddComponent<MeshCollider>();
-
-		//UnityEngine.Debug.Log("Finished!");
 	}
-
-	private void DrawTriangle(Vector3 a, Vector3 b, Vector3 c, int width, Ray mouseRay, Vector3 circumcircleOrigin, float circumcircleRadius) {
-		MoreGizmos.DrawLine(a, b, width);
-		MoreGizmos.DrawLine(b, c, width);
-		MoreGizmos.DrawLine(c, a, width);
-
-		if (Triangle.Intersects(a, b, c, mouseRay)) {
-			MoreGizmos.DrawCircle(circumcircleOrigin, slicerDebug.Plane.normal, circumcircleRadius, 1);
-		}
-	}
-
-	/*
-	private void OnDrawGizmos() {
-		if (slicerDebug == null) {
-			return;
-		}
-
-		Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-
-		Vector3 offset = Slicee.transform.position;
-		Gizmos.color = Color.white;
-		foreach (Triangle3D tri in slicerDebug.AllTriangles) {
-			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 3, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
-		}
-
-		Gizmos.color = Color.red;
-		foreach (Triangle3D tri in slicerDebug.BadTriangles) {
-			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 5, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
-		}
-
-		Gizmos.color = Color.green;
-		foreach (Triangle3D tri in slicerDebug.NewTriangles) {
-			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 3, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
-		}
-
-		Gizmos.color = Color.yellow;
-		foreach (Vector3 point in slicerDebug.Perimiter) {
-			Gizmos.DrawSphere(point + offset, 0.05f);
-		}
-
-		Gizmos.color = Color.blue;
-		if (!slicerDebug.CurrentPoint.Equals(Vector3.zero)) {
-			Gizmos.DrawSphere(slicerDebug.CurrentPoint + offset, 0.05f);
-		}
-		if (slicerDebug.CurrentTriangle.circumcircleRadius > 0) {
-			Triangle3D tri = slicerDebug.CurrentTriangle;
-			DrawTriangle(tri.a + offset, tri.b + offset, tri.c + offset, 1, ray, tri.circumcircleOrigin + offset, tri.circumcircleRadius);
-		}
-		
-		Gizmos.color = Color.cyan;
-		if (!slicerDebug.CurrentEdge.a.Equals(Vector3.zero) || !slicerDebug.CurrentEdge.b.Equals(Vector3.zero)) {
-			Vector3 a = slicerDebug.CurrentEdge.a + offset;
-			Vector3 b = slicerDebug.CurrentEdge.b + offset;
-
-			MoreGizmos.DrawLine(a, b, 2);
-		}
-	}
-	*/
 }

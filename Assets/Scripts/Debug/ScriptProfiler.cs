@@ -7,18 +7,23 @@ using System.IO;
 using UnityEngine;
 
 public class ScriptProfiler {
-    private static IScriptProfiler profiler;
+    public static bool Enabled = true;
+
+    private static IScriptProfiler enabledProfiler;
+    private static IScriptProfiler dummyProfiler;
 
     private static IScriptProfiler GetInstance() {
-        if (profiler == null) {
+        if (enabledProfiler == null) {
+            dummyProfiler = new DummyScriptProfiler();
+
             if (Application.isEditor) {
-                profiler = new DefaultScriptProfiler();
+                enabledProfiler = new DefaultScriptProfiler();
             } else {
-                profiler = new DummyScriptProfiler();
+                enabledProfiler = dummyProfiler;
             }
         }
 
-        return profiler;
+        return Enabled ? enabledProfiler : dummyProfiler;
     }
 
     public static void StartMethod([CallerFilePath]string callerFilePath = null, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNo = 0) {

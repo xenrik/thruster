@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
-public enum ReportMode { Tree, Method }
+public enum ReportMode { Tree, Method, Method_Self }
+
 public interface IScriptProfiler {
     
     void StartMethod([CallerFilePath]string callerFilePath = null, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNo = 0);

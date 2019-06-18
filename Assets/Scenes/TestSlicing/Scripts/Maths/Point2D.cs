@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-public struct Point2D {
+public class Point2D {
     private static Point2D _zero = new Point2D(0, 0);
     public static Point2D zero { get { return _zero; } }
 

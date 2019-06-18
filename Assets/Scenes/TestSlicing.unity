@@ -204,7 +204,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!135 &161173496
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -374,7 +374,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 100000, guid: f4632c73f02881247bda20bae169be51, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f4632c73f02881247bda20bae169be51, type: 3}
       propertyPath: m_LocalPosition.x
@@ -714,7 +714,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16a2b48e42547814c96e3f35222fc2e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Slicee: {fileID: 1149109809}
+  Slicee: {fileID: 161173495}
   Material: {fileID: 2100000, guid: dc1de1a5a32e90e42aa43a2e438939d5, type: 2}
   Debug: 0
   CheckForHoles: 1
@@ -792,7 +792,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa1e2b494ac5f7d4486311917c5b71ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Rotation: {x: 90, y: 0, z: 0}
+  Rotation: {x: 90, y: 70, z: 30}
   Speed: 1
 --- !u!1 &1092211857
 GameObject:

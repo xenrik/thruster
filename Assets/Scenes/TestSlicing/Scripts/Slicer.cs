@@ -24,7 +24,6 @@ public class Slicer {
     private List<int> posTriangles = new List<int>();
     private List<int> negTriangles = new List<int>();
     private List<Edge3D> edges = new List<Edge3D>();
-    private HashSet<Edge2D> perimiter = new HashSet<Edge2D>();
 
     public Slicer(Mesh mesh, bool optimise = false, bool checkForHoles = false) {
         this.mesh = mesh;
@@ -33,24 +32,6 @@ public class Slicer {
     }
 
     public void slice(Plane p) {
-        ScriptProfiler.StartMethod();
-
-        foreach (Slicer.Debug debug in doSlice(p, null)) {
-            // Do nothing
-        }
-
-        ScriptProfiler.EndMethod();
-    }
-
-    public IEnumerable<Slicer.Debug> sliceDebug(Plane p) {
-        foreach (Slicer.Debug result in doSlice(p, new Slicer.Debug())) {
-            yield return result;
-        }
-    }
-
-    private IEnumerable<Slicer.Debug> doSlice(Plane p, Slicer.Debug debug) {
-        ScriptProfiler.StartMethod();
-
         Vector3[] existingVertices = mesh.vertices;
         int[] triangles = mesh.triangles;
         Vector3[] normals = mesh.normals;
@@ -91,11 +72,9 @@ public class Slicer {
         }
 
         // Fill the holes
-        foreach (Slicer.Debug result in fillHolesBowyerWatson(p, debug)) {
-            yield return result;
-        }
+        fillHolesBowyerWatson(p);
 
-        // TODO - Optimise
+        // TODO - Optimise the mesh
         // if (optimise) {
         //    ...
         // }
@@ -119,9 +98,6 @@ public class Slicer {
 
         //Log("Positive Mesh: " + posMesh.vertices.Length + " vertices, " + posMesh.triangles.Length/3 + " triangles");
         //Log("Negative Mesh: " + negMesh.vertices.Length + " vertices, " + negMesh.triangles.Length/3 + " triangles");
-        ScriptProfiler.EndMethod();
-
-        yield break;
     }
 
     private void splitTriangle(Triangle3D t, Plane p) {
@@ -212,16 +188,14 @@ public class Slicer {
         return ray.GetPoint(length);
     }
 
-    private IEnumerable<Slicer.Debug> fillHolesBowyerWatson(Plane p, Slicer.Debug debug) {
-        ScriptProfiler.StartMethod();
-
+    private void fillHolesBowyerWatson(Plane p) {
         // Rotate the edges to be on a horizontal plane at the origin
         Quaternion up = Quaternion.LookRotation(Vector3.up);
         Quaternion planeRot = Quaternion.LookRotation(p.normal);
         Quaternion rot = up * Quaternion.Inverse(planeRot);
         Quaternion irot = Quaternion.Inverse(rot);
-
-        perimiter.Clear();
+    
+        HashSet<Edge2D> perimiter = new HashSet<Edge2D>();
         foreach (Edge3D e in edges) {
             Vector3 a = rot * (e.a + (p.distance * p.normal));
             Vector3 b = rot * (e.b + (p.distance * p.normal));
@@ -229,17 +203,8 @@ public class Slicer {
             perimiter.Add(new Edge2D(a,b));
         }
          
-        //UnityEngine.Debug.Log($"Perimiter has {perimiter.Count} edges");
-
         BowyerWatsonFill fill = new BowyerWatsonFill(perimiter, checkForHoles);
-        if (debug != null) {
-            debug.SetPlane(planeRot, p);
-            foreach (Slicer.Debug result in fill.Fill(debug)) {
-                yield return result;
-            }
-        } else {
-            fill.Fill();
-        }
+        fill.Fill();
 
         // Reorient and add to both the positivie and negative triangle lists
         foreach (Triangle2D tri in fill.Triangles) {
@@ -262,91 +227,6 @@ public class Slicer {
 
             posTriangles.AddRange(new int[] { tri3d.ai, tri3d.bi, tri3d.ci });
             negTriangles.AddRange(new int[] { tri3d.ci, tri3d.bi, tri3d.ai });
-        }
-
-        ScriptProfiler.EndMethod();
-    }
-
-    public class Debug {
-        public List<Vector3> Perimiter { get; private set; }
-
-        public Vector3 CurrentPoint { get; private set; }
-        public Triangle3D CurrentTriangle { get; private set; }
-        public Edge3D CurrentEdge { get; private set; }
-
-        public List<Triangle3D> BadTriangles { get; private set; }
-        public List<Triangle3D> NewTriangles { get; private set; }
-        public List<Triangle3D> AllTriangles { get; private set; }
-
-        public Quaternion PlaneRot { get; private set; }
-        public Plane Plane { get; private set; }
-
-        internal Debug() {
-            Reset();
-        }
-
-        internal void SetPlane(Quaternion planeRot, Plane plane) {
-            this.PlaneRot = planeRot;
-            this.Plane = plane;
-        }
-
-        public void Reset() {
-            CurrentPoint = Vector3.zero;
-            CurrentTriangle = new Triangle3D();
-            CurrentEdge = new Edge3D();
-            
-            Perimiter = new List<Vector3>();
-            BadTriangles = new List<Triangle3D>();
-            NewTriangles = new List<Triangle3D>();
-            AllTriangles = new List<Triangle3D>();
-        }
-
-        public void SetTestPoint(Point2D p) {
-            CurrentPoint = ConvertPoint(p);
-        }
-
-        public void SetTestTriangle(Triangle2D tri) {
-            CurrentTriangle = ConvertTriangle(tri);
-        }
-
-        public void SetTestEdge(Edge2D edge) {
-            CurrentEdge = new Edge3D(
-                ConvertPoint(edge.a),
-                ConvertPoint(edge.b),
-                Vector3.zero
-            );
-        }
-
-        public void AddPerimiterPoint(Point2D p) {
-            Perimiter.Add(ConvertPoint(p));
-        }
-
-        public void AddBadTriangle(Triangle2D tri) {
-            BadTriangles.Add(ConvertTriangle(tri));
-        }
-
-        public void AddNewTriangle(Triangle2D tri) {
-            NewTriangles.Add(ConvertTriangle(tri));
-        }
-
-        public void AddTriangle(Triangle2D tri) {
-            AllTriangles.Add(ConvertTriangle(tri));
-        }
-
-        private Vector3 ConvertPoint(Point2D p) {
-            return (PlaneRot * p) - (Plane.distance * Plane.normal);
-        }
-
-        private Triangle3D ConvertTriangle(Triangle2D tri) {
-            Triangle3D tri3d = new Triangle3D();
-            tri3d.a = ConvertPoint(tri.a);
-            tri3d.b = ConvertPoint(tri.b);
-            tri3d.c = ConvertPoint(tri.c);
-
-            tri3d.circumcircleOrigin = (PlaneRot * tri.circumcircleOrigin) - (Plane.distance * Plane.normal);
-            tri3d.circumcircleRadius = Mathf.Sqrt(tri.circumcircleRadiusSq);
-
-            return tri3d;
         }
     }
 }
