@@ -74,6 +74,8 @@
      <Compile Include="Assets\Scripts\CoreLinker.cs" />
      <Compile Include="Assets\Scripts\CrossSectionController.cs" />
      <Compile Include="Assets\Scripts\CrossSectionController2.cs" />
+     <Compile Include="Assets\Scripts\CrossSectionController3.cs" />
+     <Compile Include="Assets\Scripts\CrossSectionController4.cs" />
      <Compile Include="Assets\Scripts\CrossSectionMaterial.cs" />
      <Compile Include="Assets\Scripts\Debug\DefaultScriptProfiler.cs" />
      <Compile Include="Assets\Scripts\Debug\DummyScriptProfiler.cs" />

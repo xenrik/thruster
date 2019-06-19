@@ -26,7 +26,14 @@ public class Slicer {
     private List<Edge3D> edges = new List<Edge3D>();
 
     public Slicer(Mesh mesh, bool optimise = false, bool checkForHoles = false) {
-        this.mesh = mesh;
+        this.mesh = new Mesh();
+        this.mesh.vertices = mesh.vertices;
+        this.mesh.triangles = mesh.triangles;
+        this.mesh.uv = mesh.uv;
+        this.mesh.normals = mesh.normals;
+        this.mesh.colors = mesh.colors;
+        this.mesh.tangents = mesh.tangents;
+        
         this.optimise = optimise;
         this.checkForHoles = checkForHoles;
     }
