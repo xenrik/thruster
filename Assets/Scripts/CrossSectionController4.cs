@@ -72,7 +72,7 @@ public class CrossSectionController4 : MonoBehaviour {
 					planePos.z = 0;
 				}
 
-				Quaternion rotation = Quaternion.Euler(0, yRot + 180, 0) ; //* Quaternion.Euler(90, 0, 0);
+				Quaternion rotation = Quaternion.Euler(0, yRot + 180, 0) * Quaternion.Euler(0, -90, 0);
 
 				Plane plane = new Plane();
 				Vector3 normal = Quaternion.Euler(0, 90, 0) * Vector3.Cross(rotation * Vector3.up, rotation * Vector3.left);
@@ -119,6 +119,7 @@ public class CrossSectionController4 : MonoBehaviour {
 	private void OnSliceFinished(BzSliceTryResult result) {
 		Debug.Log("Result: " + result.sliced + " - " + result.outObjectNeg + "," + result.outObjectPos);
 		if (result.sliced) {
+			result.outObjectNeg.SetActive(true);
 			Destroy(result.outObjectPos);
 		}
 	}

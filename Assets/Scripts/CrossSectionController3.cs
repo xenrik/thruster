@@ -25,6 +25,7 @@ public class CrossSectionController3 : MonoBehaviour {
 	private Quaternion oldRotation;
 
 	private SlicerDetails[] slicers;
+	private bool justdoit = true;
 
 
 	// Use this for initialization
@@ -45,6 +46,8 @@ public class CrossSectionController3 : MonoBehaviour {
 			tunnelMaterials.AddRange(r.materials);
 		}
 	}
+
+	float xoffset = 0;
 	
 	// Update is called once per frame
 	void Update () {
@@ -67,27 +70,38 @@ public class CrossSectionController3 : MonoBehaviour {
 
 			Vector3 offset = transform.position - oldPosition;
 			float rotationOffset = Quaternion.Angle(transform.rotation, oldRotation);
-			if (offset.magnitude > PositionTolerance || rotationOffset > RotationTolerance || !showingCrossSection) {
+			if (offset.magnitude > PositionTolerance || rotationOffset > RotationTolerance || !showingCrossSection || justdoit) {
 				GameObject camera = gameObject;
 
 				float yRot = camera.transform.rotation.eulerAngles.y;
 				yRot = (Mathf.RoundToInt(yRot / 90) % 4) * 90;
 				bool showingFront = yRot == 0 || yRot == 180;
 
-				Vector3 planePos = Thruster.transform.position;
+				Vector3 planePos = (Thruster.transform.position - Tunnel.transform.position);
+				planePos.x /= Tunnel.transform.localScale.x;
+				planePos.y /= Tunnel.transform.localScale.y;
+				planePos.z /= Tunnel.transform.localScale.z;
+
+				planePos = Vector3.zero;
+				
+				/* 
 				planePos.y = 0;
 				if (showingFront) {
 					planePos.x = 0;
 				} else {
 					planePos.z = 0;
 				}
-
-				Quaternion rotation = Quaternion.Euler(0, yRot + 180, 0); // * Quaternion.Euler(90, 0, 0);
+				*/
 
 				Plane plane = new Plane();
-				Vector3 normal = Quaternion.Euler(0, 90, 0) * Vector3.Cross(rotation * Vector3.up, rotation * Vector3.left);
-				plane.SetNormalAndPosition(normal, planePos);
-				plane.Translate(-Tunnel.transform.position);
+				Quaternion rotation = Quaternion.Euler(xoffset++, yRot + 180, 0);// * Quaternion.Euler(30, 0, 0);
+				Vector3 normal = rotation * Vector3.up;
+				//Vector3 normal = Quaternion.Euler(0, 90, 0) * Vector3.Cross(rotation * Vector3.up, rotation * Vector3.left);
+				plane.normal = normal;
+				plane.Translate(planePos);
+
+				Debug.Log(planePos + "," + normal);
+				//plane.Translate(Tunnel.transform.position);
 
 				if (Plane != null) {
 					Plane.transform.rotation = rotation;
@@ -119,7 +133,7 @@ public class CrossSectionController3 : MonoBehaviour {
 		crossSection.transform.rotation = Tunnel.transform.rotation;
 
 		foreach (SlicerDetails details in slicers) {
-			Debug.Log("Slice!");
+			Debug.Log("Slice: " + details.filter.gameObject);
 
 			details.slicer.slice(plane);
 			details.filter.mesh = details.slicer.posMesh;

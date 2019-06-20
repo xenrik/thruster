@@ -1021,14 +1021,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec32a286f9b97164394d86589113f3ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Thruster: {fileID: 1120371584}
   SurfaceLevel: {fileID: 276848206}
-  Tunnel: {fileID: 267153548}
+  Tunnel: {fileID: 385719635}
   FadeDuration: 0.2
   Plane: {fileID: 589477719}
   PositionTolerance: 0.01
@@ -1064,7 +1064,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2dd9214a60e31574fbcb393fcd4a49c2, type: 3}
   m_Name: 
@@ -1715,7 +1715,7 @@ MeshCollider:
   m_GameObject: {fileID: 1120371584}
   m_Material: {fileID: 13400000, guid: 078011650b737e044a9762d2bf379a40, type: 2}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Convex: 1
   m_CookingOptions: 14
