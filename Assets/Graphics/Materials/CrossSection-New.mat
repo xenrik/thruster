@@ -5,7 +5,8 @@ Material:
   serializedVersion: 6
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: CrossSection-New
   m_Shader: {fileID: 4800000, guid: 50b2cd8ac1cb1b44aac3dbd6f354c908, type: 3}
   m_ShaderKeywords: 
@@ -77,4 +78,4 @@ Material:
     - _CrossColor: {r: 0.23584908, g: 0.23584908, b: 0.23584908, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _PlaneNormal: {r: 1, g: 0, b: 0, a: 0}
-    - _PlanePosition: {r: -0.041159138, g: 0, b: 0, a: 1}
+    - _PlanePosition: {r: -32.43, g: 0, b: 0, a: 1}

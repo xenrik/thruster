@@ -1,6 +1,6 @@
 ﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
-Shader "CrossSection/Others/StencilledUnlitTexture"
+Shader "Custom/CrossSection/AnotherStencil"
 {
 	Properties
 	{

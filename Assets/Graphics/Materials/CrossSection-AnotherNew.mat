@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: CrossSection-Original
-  m_Shader: {fileID: 4800000, guid: dfb2ef60de11e934f9e7571d2eb7bf08, type: 3}
+  m_Name: CrossSection-AnotherNew
+  m_Shader: {fileID: 4800000, guid: a1155c58fb3f38143996032220bfd2a2, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
