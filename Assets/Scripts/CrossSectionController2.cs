@@ -93,8 +93,6 @@ public class CrossSectionController2 : MonoBehaviour {
 			Vector3 planeNormal3 = Quaternion.Euler(0, 90, 0) * Vector3.Cross(Stencil.transform.rotation * Vector3.up, Stencil.transform.rotation * Vector3.left);
 //			Vector3 planeNormal3 = Stencil.transform.rotation * Vector3.forward;
 
-	Debug.Log(planeNormal3);
-
 			Vector4 planeNormal = new Vector4(planeNormal3.x, planeNormal3.y, planeNormal3.z, 1);
 			foreach (Material m in crossSectionMaterials) {
 				m.SetVector("_PlanePosition", planePosition);
