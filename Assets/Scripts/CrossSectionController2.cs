@@ -58,7 +58,6 @@ public class CrossSectionController2 : MonoBehaviour {
 			return;
 		}
 
-/*
 		if (Thruster.transform.position.y > SurfaceLevel.transform.position.y) {
 			if (showingCrossSection) {
 				StopAllCoroutines();
@@ -66,7 +65,7 @@ public class CrossSectionController2 : MonoBehaviour {
 
 				showingCrossSection = false;
 			}
-		} else {*/
+		} else {
 			if (!showingCrossSection) {
 				StopAllCoroutines();
 				StartCoroutine(ShowCrossSection());
@@ -99,7 +98,7 @@ public class CrossSectionController2 : MonoBehaviour {
 				m.SetVector("_PlanePosition", planePosition);
 				m.SetVector("_PlaneNormal", planeNormal);
 			}
-//		}
+		}
 	}
 
 	private IEnumerator HideCrossSection() {
